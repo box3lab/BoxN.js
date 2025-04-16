@@ -4,4 +4,4 @@
  */
 
 // 导入各类节点模块
-import "./math";
+import './math'
