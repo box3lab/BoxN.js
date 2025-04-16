@@ -1,0 +1,39 @@
+{
+  "name": "boxnjs",
+  "version": "1.0.0",
+  "description": "基于 LiteGraph.js 的可视化编辑器",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist",
+    "analyze": "webpack --analyze"
+  },
+  "keywords": [
+    "litegraph",
+    "visual-editor",
+    "node-editor",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "litegraph.js": "^0.7.18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
+    "rimraf": "^5.0.10",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.5",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
+  }
+}

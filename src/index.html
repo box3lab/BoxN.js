@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LiteGraph.js 演示应用" />
+    <title>LiteGraph.js 可视化编辑器</title>
+
+    <!-- 样式表 -->
+    <link rel="stylesheet" href="css/litegraph.css" />
+    <!-- 脚本 -->
+    <script src="js/litegraph.js"></script>
+    <style>
+      /* 重置浏览器默认边距和填充 */
+      body,
+      html {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      /* 确保画布容器填满整个屏幕 */
+      #canvas-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+      }
+
+      /* 画布样式 */
+      #mycanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background-color: #2a2a2a;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 768px) {
+        /* 移动设备上的特定样式 */
+        #mycanvas {
+          touch-action: none; /* 改善移动设备上的触摸体验 */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container">
+      <canvas id="mycanvas"></canvas>
+    </div>
+
+    <div
+      id="toolbar"
+      style="position: absolute; top: 10px; right: 10px; z-index: 1000"
+    ></div>
+  </body>
+</html>
