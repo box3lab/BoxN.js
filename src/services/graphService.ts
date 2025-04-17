@@ -4,6 +4,7 @@
  */
 import { LGraph, LGraphCanvas, LGraphNode } from 'litegraph.js'
 import liteGraphConfig from './liteGraphCfg'
+import { addCustomNodesToExport, restoreCustomNodesFromImport } from './nodeGeneratorService'
 
 // 本地存储键
 const GRAPH_STORAGE_KEY = 'boxn_graph_data'
@@ -106,6 +107,10 @@ export function exportGraph(graph: LGraph): string {
 
   try {
     const data = graph.serialize()
+
+    // 添加自定义节点定义到导出数据
+    addCustomNodesToExport(data)
+
     return JSON.stringify(data, null, 2)
   } catch (error) {
     console.error('Error exporting graph:', error)
@@ -119,11 +124,18 @@ export function exportGraph(graph: LGraph): string {
  * @param jsonData 序列化的JSON字符串
  * @returns 导入是否成功
  */
-export function importGraph(graph: LGraph, jsonData: string): boolean {
+export async function importGraph(graph: LGraph, jsonData: string): Promise<boolean> {
   if (!graph) return false
 
   try {
     const data = JSON.parse(jsonData)
+
+    // 恢复自定义节点定义
+    const restoredCount = await restoreCustomNodesFromImport(data)
+    if (restoredCount > 0) {
+      console.log(`成功恢复了 ${restoredCount} 个自定义节点`)
+    }
+
     graph.configure(data)
     return true
   } catch (error) {
@@ -142,6 +154,10 @@ export function saveGraphToLocalStorage(graph: SerializableGraph): boolean {
 
   try {
     const graphData = graph.serialize()
+
+    // 添加自定义节点定义到导出数据
+    addCustomNodesToExport(graphData)
+
     const graphJson = JSON.stringify(graphData)
     localStorage.setItem(GRAPH_STORAGE_KEY, graphJson)
     return true
@@ -167,6 +183,18 @@ export function loadGraphFromLocalStorage(graph: SerializableGraph): boolean {
     }
 
     const graphData = JSON.parse(graphJson)
+
+    // 恢复自定义节点定义
+    restoreCustomNodesFromImport(graphData)
+      .then((restoredCount) => {
+        if (restoredCount > 0) {
+          console.log(`成功从本地存储恢复了 ${restoredCount} 个自定义节点`)
+        }
+      })
+      .catch((error) => {
+        console.error('恢复自定义节点失败:', error)
+      })
+
     graph.configure(graphData)
     return true
   } catch (error) {

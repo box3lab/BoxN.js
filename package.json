@@ -13,9 +13,14 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@types/highlight.js": "^9.12.4",
     "@types/lodash": "^4.17.16",
+    "@types/marked": "^5.0.2",
+    "axios": "^1.8.4",
+    "highlight.js": "^11.11.1",
     "litegraph.js": "^0.7.18",
     "lodash": "^4.17.21",
+    "marked": "^15.0.8",
     "vue": "^3.5.13"
   },
   "devDependencies": {

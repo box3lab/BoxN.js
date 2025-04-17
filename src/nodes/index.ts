@@ -5,3 +5,4 @@
 
 // 导入各类节点模块
 import './math'
+import './custom' // 导入AI助手生成的自定义节点
