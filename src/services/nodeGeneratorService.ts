@@ -55,13 +55,16 @@ export async function createNodeFile(
           // 创建适当的节点类型路径 (如果没有提供完整路径)
           let classNodeType = nodeType
           if (!nodeType.includes('/')) {
-            classNodeType = `custom/${nodeType}/${name.toLowerCase()}`
+            classNodeType = `import/${nodeType}/${name.toLowerCase()}`
           } else if (nodeType.endsWith('/')) {
-            classNodeType = `${nodeType}${name.toLowerCase()}`
+            classNodeType = `import/${nodeType}${name.toLowerCase()}`
           } else {
             const parts = nodeType.split('/')
             parts[parts.length - 1] = name.toLowerCase()
-            classNodeType = parts.join('/')
+            // 确保导入节点路径以"import/"开头
+            classNodeType = nodeType.startsWith('import/')
+              ? parts.join('/')
+              : `import/${parts.join('/')}`
           }
 
           register(classNodeType, NodeClass)
@@ -95,7 +98,9 @@ export async function createNodeFile(
       // 使用提供的节点类型或使用默认格式
       let finalNodeType = nodeType
       if (!nodeType.includes('/')) {
-        finalNodeType = `custom/${nodeType}/${className.toLowerCase()}`
+        finalNodeType = `import/${nodeType}/${className.toLowerCase()}`
+      } else if (!nodeType.startsWith('import/')) {
+        finalNodeType = `import/${nodeType}`
       }
 
       register(finalNodeType, NodeClass)
@@ -346,4 +351,35 @@ export async function restoreCustomNodesFromImport(
   }
 
   return restoredCount
+}
+
+/**
+ * 删除自定义节点
+ * @param nodeType 节点类型路径
+ * @returns 是否成功删除
+ */
+export function deleteCustomNode(nodeType: string): boolean {
+  try {
+    // 检查节点是否存在
+    if (!customNodes.has(nodeType)) {
+      console.warn(`节点 ${nodeType} 不存在，无法删除`)
+      return false
+    }
+
+    // 获取节点定义
+    const nodeDef = customNodes.get(nodeType)
+    if (!nodeDef) return false
+
+    // 从映射中移除节点
+    customNodes.delete(nodeType)
+
+    // 注：在实际产品中，可能还需要从文件系统中删除对应的文件
+    // 并且需要考虑如何处理已在图中使用的节点实例
+    console.log(`节点 ${nodeDef.className} (${nodeType}) 已成功删除`)
+
+    return true
+  } catch (error) {
+    console.error(`删除节点 ${nodeType} 失败:`, error)
+    return false
+  }
 }

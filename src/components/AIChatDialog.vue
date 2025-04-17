@@ -359,7 +359,7 @@ export default defineComponent({
               const isDisabled = isApplying; // 只在应用中时禁用按钮，已应用状态可以再次点击
 
               const codeBlockHtml = `
-                <div class="code-block-container">
+                <div class="code-block-container" data-block-index="${blockIndex}">
                   <div class="code-block-header">
                     <span class="code-language">${language || 'javascript'}</span>
                   </div>
@@ -860,17 +860,28 @@ export default defineComponent({
         }
 
         if (successCount > 0) {
-          // 显示成功通知
+          // 显示成功通知，包含详细的路径信息
           showNotification.value = true;
-          notificationMessage.value = `成功注册了 ${successCount} 个节点！`;
+
+          // 针对单个或多个节点创建不同的通知消息
+          if (successCount === 1) {
+            const node = registeredNodes[0];
+            notificationMessage.value = `节点 ${node.className} 已成功注册为 ${node.path}！使用"${node.path}"搜索可找到此节点`;
+          } else {
+            notificationMessage.value = `成功注册了 ${successCount} 个节点！详见聊天窗口`;
+          }
+
+          // 延长显示时间，确保用户能看到路径信息
+          setTimeout(() => { showNotification.value = false; }, 5000);
 
           // 单个代码块不需要添加系统消息
           if (blockIndex === undefined) {
-            // 生成注册结果消息
+            // 生成详细的注册结果消息
             let resultMessage = `✅ 以下节点已成功注册：\n`;
             registeredNodes.forEach(node => {
               resultMessage += `- **${node.className}** 注册为 \`${node.path}\`\n`;
             });
+            resultMessage += `\n> 💡 提示：在节点菜单中搜索路径或类名可以找到这些节点`;
 
             // 添加系统消息
             messages.value.push({
@@ -882,6 +893,45 @@ export default defineComponent({
             appliedNodeMessages.value.add(messageIndex);
 
             nextTick(scrollToBottom);
+          } else {
+            // 对于单个代码块，也添加一个简洁的成功消息
+            // 创建特殊的成功消息元素
+            const successElement = document.createElement('div');
+            successElement.className = 'node-apply-success';
+            successElement.innerHTML = `
+              <div class="success-message">
+                <span class="success-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </span>
+                <div class="success-details">
+                  <div class="success-title">节点已注册成功</div>
+                  <div class="success-paths">
+                    ${registeredNodes.map(node =>
+              `<div class="path-item">${node.className} → <code>${node.path}</code></div>`
+            ).join('')}
+                  </div>
+                </div>
+              </div>
+            `;
+
+            // 找到代码块容器并添加成功消息
+            setTimeout(() => {
+              const codeBlockContainer = document.querySelector(
+                `.message[data-index="${messageIndex}"] .code-block-container[data-block-index="${blockIndex}"]`
+              );
+
+              if (codeBlockContainer) {
+                // 移除之前的成功消息（如果有）
+                const existingSuccess = codeBlockContainer.querySelector('.node-apply-success');
+                if (existingSuccess) existingSuccess.remove();
+
+                // 添加新的成功消息
+                codeBlockContainer.appendChild(successElement);
+              }
+            }, 100);
           }
 
           return true; // 返回应用成功
@@ -1912,5 +1962,54 @@ export default defineComponent({
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* 添加节点应用成功的样式 */
+:deep(.node-apply-success) {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, rgba(39, 174, 96, 0.1), rgba(39, 174, 96, 0.2));
+  border-left: 3px solid #27ae60;
+  border-radius: 0 6px 6px 0;
+  overflow: hidden;
+  animation: fadeIn 0.4s ease-out;
+}
+
+:deep(.success-message) {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+:deep(.success-icon) {
+  color: #27ae60;
+  margin-top: 3px;
+}
+
+:deep(.success-details) {
+  flex: 1;
+}
+
+:deep(.success-title) {
+  font-weight: 600;
+  color: #27ae60;
+  margin-bottom: 5px;
+}
+
+:deep(.success-paths) {
+  font-size: 13px;
+  color: #e0e0e0;
+}
+
+:deep(.path-item) {
+  margin-bottom: 4px;
+}
+
+:deep(.path-item code) {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: #f1fa8c;
 }
 </style>

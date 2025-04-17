@@ -6,11 +6,15 @@
 
   <!-- 悬浮工具箱 -->
   <FloatingToolbox :initialX="50" :initialY="50" @run="startGraph" @stop="stopGraph" @save="saveGraph"
-    @export="exportToFile" @import="importFromFile" />
+    @export="exportToFile" @import="importFromFile" @open-manager="openNodeManager" />
 
   <!-- 节点详情对话框 -->
   <NodeDetailDialog :visible="showNodeDetails" :node="selectedNode || undefined" @close="closeNodeDetails"
     @update="handleNodeUpdate" />
+
+  <!-- 节点管理器对话框 -->
+  <NodeManagerDialog :visible="showNodeManager" @close="closeNodeManager" @node-imported="handleNodeImported"
+    @node-deleted="handleNodeDeleted" />
 
   <!-- AI聊天助手 -->
   <AIChatDialog />
@@ -48,6 +52,7 @@ import {
 import NodeDetailDialog from './NodeDetailDialog.vue'
 import FloatingToolbox from './FloatingToolbox.vue'
 import AIChatDialog from './AIChatDialog.vue'
+import NodeManagerDialog from './NodeManagerDialog.vue'
 
 const graph = ref<LGraph | null>(null)
 const graphCanvas = ref<LGraphCanvas | null>(null)
@@ -61,6 +66,9 @@ const showNotificationFlag = ref(false)
 const notificationElement = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 let saveNotificationTimeout: number | null = null
+
+// 节点管理器状态
+const showNodeManager = ref(false)
 
 onMounted(() => {
   initLiteGraph()
@@ -242,6 +250,33 @@ function handleNodeUpdate(node: LGraphNode, properties: Record<string, unknown>)
 
   Object.assign(node.properties, properties)
 
+  if (graphCanvas.value) {
+    graphCanvas.value.draw(true, true)
+  }
+}
+
+// 节点管理器相关功能
+function openNodeManager() {
+  showNodeManager.value = true
+}
+
+function closeNodeManager() {
+  showNodeManager.value = false
+}
+
+function handleNodeImported(count: number) {
+  showNotification(`已成功导入 ${count} 个节点`, 'success')
+
+  // 刷新画布
+  if (graphCanvas.value) {
+    graphCanvas.value.draw(true, true)
+  }
+}
+
+function handleNodeDeleted(nodeType: string) {
+  showNotification(`已删除节点: ${nodeType}`, 'success')
+
+  // 刷新画布
   if (graphCanvas.value) {
     graphCanvas.value.draw(true, true)
   }

@@ -1,111 +1,67 @@
 <template>
-  <div
-    ref="toolbox"
-    class="floating-toolbox"
-    :class="{ 'is-running': isRunning }"
-    :style="{ top: position.y + 'px', left: position.x + 'px' }"
-    @mousedown="startDrag"
-    @touchstart="startDrag"
-  >
+  <div ref="toolbox" class="floating-toolbox" :class="{ 'is-running': isRunning }"
+    :style="{ top: position.y + 'px', left: position.x + 'px' }" @mousedown="startDrag" @touchstart="startDrag">
     <div class="toolbox-handle">
       <span class="drag-indicator">⋮⋮</span>
     </div>
     <div class="filename-container">
       <div class="filename-label">文件名:</div>
       <div class="filename-input-group">
-        <input
-          type="text"
-          v-model="filename"
-          placeholder="请输入文件名"
-          class="filename-input"
-          title="设置导出文件名"
-        />
+        <input type="text" v-model="filename" placeholder="请输入文件名" class="filename-input" title="设置导出文件名" />
       </div>
       <div class="filename-tips">设置下载时使用的文件名</div>
     </div>
     <div class="toolbox-content">
       <div class="other-buttons">
+        <button class="toolbox-btn btn-node-manager" @click="$emit('open-manager')" title="节点管理器">
+          <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
+            height="24">
+            <path
+              d="M832 64H192c-35.3 0-64 28.7-64 64v768c0 35.3 28.7 64 64 64h640c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64zM200 192h80v80h-80v-80z m0 160h80v80h-80v-80z m0 160h80v80h-80v-80z m160 320H200v-80h160v80z m240 0H400v-80h200v80z m264 0h-224v-80h224v80z m0-160H400v-80h464v80z m0-160H400v-80h464v80z m0-160H400v-80h464v80z"
+              fill="#ffffff"></path>
+          </svg>
+        </button>
+
         <button class="toolbox-btn btn-import" @click="$emit('import')" title="从文件导入">
-          <svg
-            class="icon"
-            viewBox="0 0 1052 1024"
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-          >
+          <svg class="icon" viewBox="0 0 1052 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
+            height="24">
             <path
               d="M22.926398 1001.119364V45.715511h397.573937l151.241007 137.283819h457.933056v818.120034z m91.522545-91.522546h823.702909v-439.308218h-823.702909z m823.702909-530.830764v-104.335701h-401.738213l-26.129687-23.795862-125.157081-113.579479H114.448943v241.711042z"
-              fill="#ffffff"
-            ></path>
+              fill="#ffffff"></path>
           </svg>
         </button>
 
         <button class="toolbox-btn btn-export" @click="exportFile" title="导出到文件">
-          <svg
-            class="icon"
-            viewBox="0 0 1024 1024"
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-          >
+          <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
+            height="24">
             <path
               d="M918.186667 1024H105.813333C68.266667 1024 34.133333 993.28 34.133333 952.32V211.626667c0-37.546667 34.133333-71.68 71.68-71.68h194.56c30.72 0 54.613333 23.893333 54.613334 54.613333s-23.893333 51.2-54.613334 51.2H139.946667v672.426667h740.693333V245.76h-160.426667c-30.72 0-54.613333-23.893333-54.613333-54.613333S689.493333 136.533333 720.213333 136.533333h194.56C955.733333 139.946667 989.866667 174.08 989.866667 211.626667v740.693333c0 40.96-34.133333 71.68-71.68 71.68z m-177.493334-546.133333c0 13.653333-6.826667 27.306667-17.066666 37.546666L546.133333 692.906667c-10.24 10.24-23.893333 17.066667-37.546666 17.066666-13.653333 0-27.306667-6.826667-37.546667-17.066666l-177.493333-177.493334c-10.24-10.24-17.066667-23.893333-17.066667-37.546666 0-30.72 23.893333-54.613333 54.613333-54.613334 13.653333 0 27.306667 6.826667 37.546667 17.066667l85.333333 85.333333V54.613333C457.386667 23.893333 481.28 0 512 0s54.613333 23.893333 54.613333 54.613333v471.04l85.333334-85.333333c10.24-10.24 23.893333-17.066667 37.546666-17.066667 27.306667 0 51.2 23.893333 51.2 54.613334z"
-              fill="#ffffff"
-            ></path>
+              fill="#ffffff"></path>
           </svg>
         </button>
 
         <button class="toolbox-btn btn-save" @click="$emit('save')" title="保存 (Ctrl+S / ⌘+S)">
-          <svg
-            class="icon"
-            viewBox="0 0 1024 1024"
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-          >
+          <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
+            height="24">
             <path
               d="M298.666667 810.666667v-256h426.666666v256h85.333334V333.994667L690.005333 213.333333H213.333333v597.333334h85.333334zM170.666667 128h554.666666l170.666667 170.666667v554.666666a42.666667 42.666667 0 0 1-42.666667 42.666667H170.666667a42.666667 42.666667 0 0 1-42.666667-42.666667V170.666667a42.666667 42.666667 0 0 1 42.666667-42.666667z m213.333333 512v170.666667h256v-170.666667H384z"
-              fill="#ffffff"
-            ></path>
+              fill="#ffffff"></path>
           </svg>
         </button>
       </div>
-      <button
-        class="toolbox-btn btn-control"
-        :class="{ 'btn-stop': isRunning, 'btn-run': !isRunning }"
-        @click="toggleRunning"
-        :title="isRunning ? '停止' : '运行'"
-      >
-        <svg
-          v-if="isRunning"
-          class="icon icon-control"
-          viewBox="0 0 1024 1024"
-          version="1.1"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-        >
+      <button class="toolbox-btn btn-control" :class="{ 'btn-stop': isRunning, 'btn-run': !isRunning }"
+        @click="toggleRunning" :title="isRunning ? '停止' : '运行'">
+        <svg v-if="isRunning" class="icon icon-control" viewBox="0 0 1024 1024" version="1.1"
+          xmlns="http://www.w3.org/2000/svg" width="24" height="24">
           <path
             d="M128 128m53.333333 0l661.333334 0q53.333333 0 53.333333 53.333333l0 661.333334q0 53.333333-53.333333 53.333333l-661.333334 0q-53.333333 0-53.333333-53.333333l0-661.333334q0-53.333333 53.333333-53.333333Z"
-            fill="#ffffff"
-          ></path>
+            fill="#ffffff"></path>
         </svg>
-        <svg
-          v-else
-          class="icon icon-control"
-          viewBox="0 0 1024 1024"
-          version="1.1"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-        >
+        <svg v-else class="icon icon-control" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+          width="24" height="24">
           <path
             d="M170.666667 128l2.133333 768c0 34.133333 36.266667 53.333333 64 34.133333l597.333333-384c25.6-17.066667 25.6-53.333333 0-70.4L234.666667 91.733333C206.933333 74.666667 170.666667 93.866667 170.666667 128z"
-            fill="#ffffff"
-          ></path>
+            fill="#ffffff"></path>
         </svg>
       </button>
     </div>
@@ -126,7 +82,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['run', 'stop', 'save', 'export', 'import'])
+const emit = defineEmits(['run', 'stop', 'save', 'export', 'import', 'open-manager'])
 
 // 文件名
 const filename = ref('litegraph')
@@ -416,6 +372,16 @@ onMounted(() => {
 
 .is-running .btn-control:hover {
   background-color: #d82a2a;
+}
+
+/* 添加节点管理器按钮样式 */
+.btn-node-manager {
+  background-color: #8e44ad;
+  border-radius: 5px;
+}
+
+.btn-node-manager:hover {
+  background-color: #9b59b6;
 }
 
 @media (max-width: 480px) {
