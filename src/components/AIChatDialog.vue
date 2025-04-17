@@ -209,7 +209,6 @@ LiteGraph.registerNodeType("color/random", RandomColorNode);
 // 为Window对象添加类型定义
 declare global {
   interface Window {
-    // copyCodeBlock: (messageIndex: number, blockIndex: number) => void; // 移除复制代码方法
     applySingleNodeCode: (messageIndex: number, blockIndex: number) => Promise<void>;
   }
 }
@@ -315,7 +314,7 @@ export default defineComponent({
       return classNames;
     };
 
-    // 修改formatMessage方法，为每个代码块添加单独的操作按钮
+    // 修改formatMessage方法，添加节点应用中状态
     const formatMessage = (text: string, messageIndex: number) => {
       try {
         // 准备一个空数组来收集处理后的内容片段
@@ -351,9 +350,13 @@ export default defineComponent({
                 highlightedCode = code; // 高亮失败时使用原始代码
               }
 
-              // 构建代码块HTML，只保留应用节点按钮
+              // 构建代码块HTML，添加重新应用功能
               const blockIndex = Math.floor(i / 2); // 计算实际的代码块索引
               const isApplied = appliedNodeBlocks.value.has(`${messageIndex}-${blockIndex}`);
+              const isApplying = applyingBlocks.value.has(`${messageIndex}-${blockIndex}`);
+
+              const buttonStateClass = isApplied ? 'applied' : (isApplying ? 'applying' : '');
+              const isDisabled = isApplying; // 只在应用中时禁用按钮，已应用状态可以再次点击
 
               const codeBlockHtml = `
                 <div class="code-block-container">
@@ -363,21 +366,27 @@ export default defineComponent({
                   <pre class="code-block"><code class="hljs">${highlightedCode}</code></pre>
                   <div class="code-block-actions">
                     <button onclick="window.applySingleNodeCode(${messageIndex}, ${blockIndex})"
-                      class="apply-node-button ${isApplied ? 'applied' : ''}"
-                      ${isApplied ? 'disabled' : ''}>
+                      class="apply-node-button ${buttonStateClass}"
+                      ${isDisabled ? 'disabled' : ''}>
                       <span class="apply-icon">
                         ${isApplied ?
                   `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 6L9 17l-5-5"/>
-                          </svg>`
-                  :
-                  `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                            <polyline points="22 4 12 14.01 9 11.01"/>
-                          </svg>`
+                              <path d="M20 6L9 17l-5-5"/>
+                            </svg>`
+                  : (isApplying ?
+                    `<svg class="spinner" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M16 12a4 4 0 1 1-8 0"></path>
+                              </svg>`
+                    :
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                              </svg>`
+                  )
                 }
                       </span>
-                      <span class="apply-text">${isApplied ? '已应用' : '应用节点'}</span>
+                      <span class="apply-text">${isApplied ? '重新应用' : (isApplying ? '应用中...' : '应用节点')}</span>
                     </button>
                   </div>
                 </div>
@@ -698,6 +707,9 @@ export default defineComponent({
     // 添加用于跟踪已应用代码块的状态
     const appliedNodeBlocks = ref(new Set<string>());
 
+    // 添加正在应用节点的状态追踪
+    const applyingBlocks = ref(new Set<string>());
+
     onMounted(() => {
       // 添加全局鼠标事件监听
       window.addEventListener('mousemove', doDrag)
@@ -721,12 +733,21 @@ export default defineComponent({
         console.log(`找到 ${codeBlocks.length} 个代码块`);
 
         if (blockIndex < codeBlocks.length) {
-          const singleCode = codeBlocks[blockIndex];
-          const success = await applyNodeCode(singleCode, messageIndex, blockIndex);
+          const blockId = `${messageIndex}-${blockIndex}`;
+          // 设置应用中状态
+          applyingBlocks.value.add(blockId);
 
-          if (success) {
-            // 标记此代码块已应用
-            appliedNodeBlocks.value.add(`${messageIndex}-${blockIndex}`);
+          try {
+            const singleCode = codeBlocks[blockIndex];
+            const success = await applyNodeCode(singleCode, messageIndex, blockIndex);
+
+            if (success) {
+              // 标记此代码块已应用
+              appliedNodeBlocks.value.add(blockId);
+            }
+          } finally {
+            // 无论成功失败，都移除应用中状态
+            applyingBlocks.value.delete(blockId);
           }
         } else {
           console.error('代码块索引超出范围:', blockIndex, codeBlocks.length);
@@ -761,7 +782,7 @@ export default defineComponent({
       return codeBlocks;
     };
 
-    // 修改应用节点代码函数，返回应用结果
+    // 修改应用节点代码函数，添加错误处理和修复建议功能
     const applyNodeCode = async (message: string, messageIndex: number, blockIndex?: number): Promise<boolean> => {
       try {
         // 如果传入了完整代码，直接使用
@@ -788,6 +809,9 @@ export default defineComponent({
           showNotification.value = true;
           notificationMessage.value = '无法识别节点类名。';
           setTimeout(() => { showNotification.value = false; }, 3000);
+
+          // 添加到对话中让AI修复错误
+          addFixRequestMessage(code, '无法识别节点类名，请提供有效的节点类定义。');
           return false;
         }
 
@@ -798,25 +822,41 @@ export default defineComponent({
         let successCount = 0;
         const registeredNodes: { className: string, path: string }[] = [];
 
-        for (const className of classNames) {
-          let nodePath: string;
+        try {
+          // 尝试评估代码以发现语法错误
+          // 注意：这只是一个简单的语法检查，不能捕获所有错误
+          new Function(code);
 
-          // 如果在注册语句中找到了这个类的路径，就使用它
-          if (pathMap.has(className)) {
-            nodePath = pathMap.get(className)!;
-          } else {
-            // 否则生成一个默认路径
-            const category = detectCategory(code, className);
-            nodePath = `custom/${category}/${className.toLowerCase()}`;
+          for (const className of classNames) {
+            let nodePath: string;
+
+            // 如果在注册语句中找到了这个类的路径，就使用它
+            if (pathMap.has(className)) {
+              nodePath = pathMap.get(className)!;
+            } else {
+              // 否则生成一个默认路径
+              const category = detectCategory(code, className);
+              nodePath = `custom/${category}/${className.toLowerCase()}`;
+            }
+
+            // 注册节点
+            const success = await createNodeFile(className, nodePath, code);
+
+            if (success) {
+              successCount++;
+              registeredNodes.push({ className, path: nodePath });
+            }
           }
+        } catch (syntaxError) {
+          // 捕获JavaScript语法错误
+          console.error('节点代码存在语法错误:', syntaxError);
+          showNotification.value = true;
+          notificationMessage.value = `代码存在语法错误: ${(syntaxError as Error).message}`;
+          setTimeout(() => { showNotification.value = false; }, 5000);
 
-          // 注册节点
-          const success = await createNodeFile(className, nodePath, code);
-
-          if (success) {
-            successCount++;
-            registeredNodes.push({ className, path: nodePath });
-          }
+          // 添加到对话中让AI修复错误
+          addFixRequestMessage(code, `语法错误: ${(syntaxError as Error).message}`);
+          return false;
         }
 
         if (successCount > 0) {
@@ -847,15 +887,168 @@ export default defineComponent({
           return true; // 返回应用成功
         } else {
           showNotification.value = true;
-          notificationMessage.value = '节点应用失败，可能存在语法错误。';
-          return false; // 返回应用失败
+          notificationMessage.value = '节点应用失败，可能存在语法或兼容性错误。';
+
+          // 添加到对话中让AI修复错误
+          addFixRequestMessage(code, '节点应用失败，可能存在不明显的语法或兼容性问题。');
+          return false;
         }
       } catch (error) {
         console.error('应用节点代码失败:', error);
         showNotification.value = true;
-        notificationMessage.value = '应用节点时发生错误。';
-        setTimeout(() => { showNotification.value = false; }, 3000);
+        notificationMessage.value = `应用节点时发生错误: ${(error as Error).message}`;
+        setTimeout(() => { showNotification.value = false; }, 5000);
+
+        // 添加到对话中让AI修复错误
+        addFixRequestMessage(message, `应用节点失败，错误信息: ${(error as Error).message}`);
         return false;
+      }
+    };
+
+    // 添加请求AI修复代码的函数
+    const addFixRequestMessage = (code: string, errorMessage: string) => {
+      // 添加用户消息，请求修复
+      const fixRequestMessage = `修复这段代码，错误信息: ${errorMessage}\n\`\`\`javascript\n${code}\n\`\`\``;
+
+      messages.value.push({
+        role: 'user',
+        content: fixRequestMessage
+      });
+
+      // 触发AI响应，但是不通过正常的sendMessage函数，直接调用streamOpenAIResponse
+      // 这样避免再次添加用户消息，防止消息显示两次
+      isProcessing.value = true;
+
+      // 直接调用API请求，跳过sendMessage中的消息添加部分
+      streamOpenAIResponseDirectly();
+
+      nextTick(scrollToBottom);
+    };
+
+    // 添加直接调用API的函数，避免重复添加消息
+    const streamOpenAIResponseDirectly = async () => {
+      try {
+        // 激活打字状态
+        isTyping.value = true;
+
+        // 准备接收流式响应
+        const lastMessageIndex = messages.value.length;
+        messages.value.push({
+          role: 'assistant',
+          content: ''
+        });
+
+        // 创建所有历史消息
+        const messageHistory = [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...messages.value.slice(0, -1) // 不包括我们刚刚添加的空消息
+        ];
+
+        // 准备请求体
+        const requestData: OpenAIRequest = {
+          model: 'deepseek-ai/DeepSeek-V2.5',
+          messages: messageHistory,
+          stream: true
+        };
+
+        // 中止之前的请求
+        if (streamController.value) {
+          streamController.value.abort();
+        }
+
+        // 创建新的控制器
+        streamController.value = new AbortController();
+        const signal = streamController.value.signal;
+
+        // 发送请求
+        const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          },
+          body: JSON.stringify(requestData),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`API请求失败: ${response.statusText}`);
+        }
+
+        // 隐藏打字状态
+        isTyping.value = false;
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('无法获取响应流');
+        }
+
+        const decoder = new TextDecoder('utf-8');
+        let done = false;
+
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
+
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(line.substring(6));
+
+                // 修复解析逻辑，处理不同API响应格式
+                if (data.choices && data.choices[0]) {
+                  const choice = data.choices[0];
+                  if (choice.delta && choice.delta.content) {
+                    // OpenAI格式
+                    messages.value[lastMessageIndex].content += choice.delta.content;
+                    nextTick(scrollToBottom);
+                  } else if (choice.text) {
+                    // 一些API返回text而不是delta.content
+                    messages.value[lastMessageIndex].content += choice.text;
+                    nextTick(scrollToBottom);
+                  } else if (choice.message && choice.message.content) {
+                    // 其他API可能在message对象中包含content
+                    messages.value[lastMessageIndex].content += choice.message.content;
+                    nextTick(scrollToBottom);
+                  } else if (choice.content) {
+                    // 直接包含content
+                    messages.value[lastMessageIndex].content += choice.content;
+                    nextTick(scrollToBottom);
+                  }
+                }
+              } catch (e) {
+                console.error('解析流数据失败:', e);
+                // 尝试记录原始数据以便调试
+                console.log('原始数据:', line.substring(6));
+              }
+            }
+          }
+        }
+
+        // 完成后滚动到底部并重置处理状态
+        nextTick(scrollToBottom);
+        isProcessing.value = false;
+
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('流请求被中止');
+        } else {
+          console.error('流式请求失败:', error);
+          messages.value.push({
+            role: 'assistant',
+            content: '抱歉，API请求失败，请稍后再试。'
+          });
+        }
+        isTyping.value = false;
+        isProcessing.value = false; // 确保错误情况下也重置状态
+        nextTick(scrollToBottom);
       }
     };
 
@@ -927,7 +1120,8 @@ export default defineComponent({
       appliedNodeMessages,
       appliedNodeBlocks,
       isProcessing,
-      stopResponse
+      stopResponse,
+      applyingBlocks
     }
   }
 })
@@ -1504,19 +1698,20 @@ export default defineComponent({
 }
 
 :deep(.apply-node-button.applied) {
-  background: linear-gradient(135deg, #34495e, #2c3e50);
-  box-shadow: none;
-  cursor: default;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+  cursor: pointer;
   opacity: 0.9;
 }
 
 :deep(.apply-node-button.applied:hover) {
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(52, 152, 219, 0.4);
+  background: linear-gradient(135deg, #2980b9, #3498db);
 }
 
 :deep(.apply-node-button.applied::before) {
-  display: none;
+  display: block;
 }
 
 :deep(.apply-icon) {
@@ -1686,5 +1881,36 @@ export default defineComponent({
   border: none;
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* 添加应用中按钮的样式 */
+:deep(.apply-node-button.applying) {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  cursor: not-allowed;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(52, 152, 219, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+  }
+}
+
+:deep(.spinner) {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
