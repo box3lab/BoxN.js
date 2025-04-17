@@ -184,18 +184,31 @@ export function loadGraphFromLocalStorage(graph: SerializableGraph): boolean {
 
     const graphData = JSON.parse(graphJson)
 
-    // 恢复自定义节点定义
+    // 首先恢复自定义节点定义，然后再延迟加载图形配置
+    // 这样可以确保所有节点（包括第三方节点）都已经注册好
     restoreCustomNodesFromImport(graphData)
       .then((restoredCount) => {
         if (restoredCount > 0) {
           console.log(`成功从本地存储恢复了 ${restoredCount} 个自定义节点`)
+
+          // 添加1秒延迟，确保所有节点注册完成
+          setTimeout(() => {
+            console.log('节点注册完成，开始加载图形配置...')
+            // 延迟后应用图形配置
+            graph.configure(graphData)
+            console.log('图形配置加载完成')
+          }, 0)
+        } else {
+          // 如果没有自定义节点，直接加载图形配置
+          graph.configure(graphData)
         }
       })
       .catch((error) => {
         console.error('恢复自定义节点失败:', error)
+        // 出错时仍然尝试加载图形配置
+        graph.configure(graphData)
       })
 
-    graph.configure(graphData)
     return true
   } catch (error) {
     console.error('Error loading graph from local storage:', error)
