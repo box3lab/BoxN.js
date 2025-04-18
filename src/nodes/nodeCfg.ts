@@ -13,13 +13,14 @@ import { LGraphNode } from 'litegraph.js'
  * @param nodeClass 节点类
  */
 export function register(type: string, nodeClass: typeof LGraphNode): void {
-  // 确保注册前未注册
-  if (!LiteGraph.registered_node_types[type]) {
-    LiteGraph.registerNodeType(type, nodeClass)
-    console.log(`Node registered: ${type}`)
-  } else {
-    console.warn(`Node type ${type} already registered, skipping.`)
-  }
+  LiteGraph.registerNodeType(type, nodeClass)
+  // // 确保注册前未注册
+  // if (!LiteGraph.registered_node_types[type]) {
+  //   LiteGraph.registerNodeType(type, nodeClass)
+  //   console.log(`Node registered: ${type}`)
+  // } else {
+  //   console.warn(`Node type ${type} already registered, skipping.`)
+  // }
 }
 
 /**
