@@ -755,13 +755,25 @@ export default defineComponent({
       isImporting.value = true;
       let successCount = 0;
 
+      // 检查代码中是否包含节点注册路径
+      const registerTypeMap = new Map<string, string>();
+      const registerRegex = /LiteGraph\.registerNodeType\s*\(\s*(['"])(.*?)\1\s*,\s*([a-zA-Z0-9_]+)\s*\)\s*;?/g;
+      let registerMatch;
+
+      while ((registerMatch = registerRegex.exec(importedCode.value)) !== null) {
+        registerTypeMap.set(registerMatch[3], registerMatch[2]);
+      }
+
       // 为每个检测到的类创建一个节点
       for (const className of detectedClasses.value) {
         // 使用文件名（去除扩展名）
         const fileName = uploadedFileName.value.replace(/\.[^/.]+$/, "");
 
-        // 使用提取到的类名作为nodeType
-        const nodeType = className;
+        // 尝试从注册信息中获取原始路径，如果没有则使用类名
+        let nodeType = className;
+        if (registerTypeMap.has(className)) {
+          nodeType = registerTypeMap.get(className) || className;
+        }
 
         // 调用createNodeFile并传递文件名作为第5个参数
         const success = await createNodeFile(className, nodeType, importedCode.value, false, fileName);
