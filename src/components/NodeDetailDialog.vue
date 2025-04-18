@@ -26,8 +26,31 @@
               <div class="properties-list">
                 <div v-for="(value, key) in node.properties" :key="key" class="property-item">
                   <span class="property-name">{{ key }}:</span>
-                  <input v-if="isEditable(key, value)" class="property-value" :value="value"
-                    @change="updateProperty(key, $event)" :title="'编辑 ' + key + ' 属性'" />
+                  <input
+                    v-if="isEditable(key, value) && !isEnumProperty(key) && !isBooleanProperty(value) && !isNumberProperty(value) && !isColorProperty(key, value)"
+                    class="property-value" :value="value" @change="updateProperty(key, $event)"
+                    :title="'编辑 ' + key + ' 属性'" />
+                  <input v-else-if="isColorProperty(key, value)" type="color" class="property-value color-picker"
+                    :value="formatColorValue(value)" @change="updateProperty(key, $event)"
+                    :title="'选择 ' + key + ' 颜色'" />
+                  <div v-else-if="isNumberProperty(value)" class="number-input-container">
+                    <button class="number-btn" @click="decrementNumber(key)">-</button>
+                    <input type="number" class="property-value number-value" :value="value"
+                      @change="updateProperty(key, $event)" :title="'编辑 ' + key + ' 属性'" step="1" />
+                    <button class="number-btn" @click="incrementNumber(key)">+</button>
+                  </div>
+                  <select v-else-if="isEnumProperty(key)" class="property-value select-value" :value="value"
+                    @change="updateProperty(key, $event)" :title="'选择 ' + key + ' 属性'">
+                    <option v-for="option in getPropertyOptions(key)" :key="option" :value="option">{{ option }}
+                    </option>
+                  </select>
+                  <div v-else-if="isBooleanProperty(value)" class="toggle-switch-container">
+                    <label class="toggle-switch">
+                      <input type="checkbox" :checked="Boolean(value)" @change="updateBooleanProperty(key, $event)">
+                      <span class="slider round"></span>
+                    </label>
+                    <span class="boolean-value">{{ Boolean(value) ? 'True' : 'False' }}</span>
+                  </div>
                   <span v-else class="property-value readonly" :title="key + ' 不可编辑'">{{ formatValue(value) }}</span>
                 </div>
               </div>
@@ -121,6 +144,74 @@ export default defineComponent({
       this.$emit('close')
     },
 
+    // 克隆节点并更新属性，避免直接修改props和循环引用
+    cloneAndUpdateNodeProperty(key: string, value: PropertyValue) {
+      if (!this.node) return null;
+
+      try {
+        // 不使用JSON.parse(JSON.stringify())克隆，避免循环引用问题
+        // 只复制必要的属性进行更新
+        const clonedProperties: Record<string, PropertyValue> = {};
+
+        // 复制现有属性（如果存在）
+        const nodeProperties = this.node.properties || {};
+        Object.keys(nodeProperties).forEach(propKey => {
+
+          const propValue = nodeProperties[propKey];
+          if (propValue !== undefined && propValue !== null &&
+            typeof propValue !== 'function' && typeof propValue !== 'object') {
+            clonedProperties[propKey] = propValue;
+          }
+        });
+
+        // 添加新属性
+        clonedProperties[key] = value;
+
+        // 返回只有必要信息的更新后的节点
+        return {
+          title: this.node.title,
+          type: this.node.type,
+          properties: clonedProperties
+        };
+      } catch (error) {
+        console.error('克隆节点失败:', error);
+        return null;
+      }
+    },
+
+    // 尝试设置节点属性的不同方法
+    trySetNodeProperty(key: string, value: PropertyValue) {
+      if (!this.node) return;
+
+      try {
+        // 方法1: 直接调用setProperty (如果存在)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (this.node && typeof (this.node as any).setProperty === 'function') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (this.node as any).setProperty(key, value);
+          console.log(`使用setProperty方法: ${key} = ${value}`);
+          return true;
+        }
+
+        // 方法2: 直接更新属性 (冒险但有效)
+        if (this.node && this.node.properties) {
+          // 先备份原始属性值
+          const originalValue = this.node.properties[key];
+
+          // eslint-disable-next-line vue/no-mutating-props
+          this.node.properties[key] = value;
+
+          console.log(`直接更新属性 (原始值=${originalValue}, 新值=${value})`);
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error('尝试设置节点属性失败:', error);
+        return false;
+      }
+    },
+
     isEditable(key: string, value: PropertyValue): boolean {
       return typeof value !== 'object' && typeof value !== 'function'
     },
@@ -158,28 +249,31 @@ export default defineComponent({
     },
 
     updateProperty(key: string, event: Event) {
-      if (!this.node || !this.node.properties) return
+      if (!this.node) return
 
       const target = event.target as HTMLInputElement
       let value: PropertyValue = target.value
 
-      // 尝试转换为原始类型
-      const originalValue = this.node.properties[key]
-      if (typeof originalValue === 'number') {
-        value = Number(value)
-      } else if (originalValue === 'true' || originalValue === 'false') {
-        value = value === 'true'
-      }
+      try {
+        // 尝试转换为原始类型
+        const originalValue = this.node.properties ? this.node.properties[key] : null
+        if (typeof originalValue === 'number') {
+          value = Number(value)
+        } else if (originalValue === 'true' || originalValue === 'false') {
+          value = value === 'true'
+        }
 
-      // 创建副本而不是直接修改props
-      const updatedNode = { ...this.node }
-      if (!updatedNode.properties) {
-        updatedNode.properties = {}
-      }
-      updatedNode.properties = { ...updatedNode.properties, [key]: value }
+        // 尝试直接设置属性（内部处理了lint问题）
+        this.trySetNodeProperty(key, value);
 
-      // 通知父组件更新
-      this.$emit('update', updatedNode)
+        // 创建副本通知父组件
+        const updatedNode = this.cloneAndUpdateNodeProperty(key, value);
+        if (updatedNode) {
+          this.$emit('update', updatedNode);
+        }
+      } catch (error) {
+        console.error('更新属性失败:', error)
+      }
     },
 
     getInputs(): SlotInfo[] {
@@ -212,6 +306,186 @@ export default defineComponent({
           type: typeName,
         }
       })
+    },
+
+    isEnumProperty(key: string): boolean {
+      // 根据属性名判断是否为枚举类型
+      const enumProperties = [
+        'shape', 'mode', 'type', 'alignment', 'direction', 'format', 'style',
+        'position', 'target', 'size', 'variant', 'operation', 'method', 'action',
+        'display', 'layout', 'color', 'state', 'status', 'level', 'theme'
+      ];
+      // 检查是否精确匹配
+      if (enumProperties.includes(key.toLowerCase())) {
+        return true;
+      }
+      // 检查是否包含关键词
+      const keywords = ['mode', 'type', 'format', 'style', 'align', 'position', 'method'];
+      for (const keyword of keywords) {
+        if (key.toLowerCase().includes(keyword)) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    getPropertyOptions(key: string): string[] {
+      // 根据不同属性名返回相应的选项
+      const optionsMap: Record<string, string[]> = {
+        'shape': ['box', 'round', 'circle', 'diamond', 'square', 'ellipse', 'rect'],
+        'mode': ['default', 'always', 'never', 'auto', 'manual', 'normal', 'edit', 'view'],
+        'type': ['default', 'primary', 'success', 'warning', 'danger', 'info', 'text', 'number', 'string', 'boolean', 'object'],
+        'alignment': ['left', 'center', 'right', 'justify', 'start', 'end'],
+        'direction': ['horizontal', 'vertical', 'both', 'up', 'down', 'left', 'right'],
+        'format': ['number', 'string', 'boolean', 'object', 'array', 'date', 'time', 'datetime', 'json'],
+        'style': ['solid', 'dashed', 'dotted', 'none', 'block', 'inline', 'flex', 'grid'],
+        'position': ['top', 'bottom', 'left', 'right', 'center', 'absolute', 'relative', 'fixed'],
+        'target': ['self', 'blank', 'parent', 'top', 'new', 'current'],
+        'size': ['small', 'medium', 'large', 'mini', 'default', 'full', 'auto'],
+        'color': ['primary', 'success', 'warning', 'danger', 'info', 'default', 'white', 'black'],
+        'status': ['active', 'inactive', 'pending', 'success', 'error', 'warning'],
+        'operation': ['add', 'subtract', 'multiply', 'divide', 'and', 'or', 'not', 'xor'],
+        'method': ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+        'action': ['save', 'delete', 'update', 'create', 'cancel', 'submit', 'reset']
+      };
+
+      const lowKey = key.toLowerCase();
+
+      // 检查是否有具体的属性键匹配
+      for (const [mapKey, options] of Object.entries(optionsMap)) {
+        if (lowKey === mapKey || lowKey.includes(mapKey)) {
+          return options;
+        }
+      }
+
+      // 默认返回一些通用选项
+      return ['default', 'auto', 'custom', 'none'];
+    },
+
+    isBooleanProperty(value: PropertyValue): boolean {
+      return typeof value === 'boolean' ||
+        value === 'true' || value === 'false' ||
+        (typeof value === 'string' && ['true', 'false', 'yes', 'no', 'on', 'off'].includes(value.toLowerCase()));
+    },
+
+    updateBooleanProperty(key: string, event: Event) {
+      if (!this.node) return;
+
+      try {
+        const target = event.target as HTMLInputElement;
+        const value = target.checked;
+
+        // 尝试直接设置属性
+        this.trySetNodeProperty(key, value);
+
+        // 创建副本通知父组件
+        const updatedNode = this.cloneAndUpdateNodeProperty(key, value);
+        if (updatedNode) {
+          this.$emit('update', updatedNode);
+        }
+      } catch (error) {
+        console.error('更新布尔属性失败:', error);
+      }
+    },
+
+    isNumberProperty(value: PropertyValue): boolean {
+      return typeof value === 'number' || (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '');
+    },
+
+    incrementNumber(key: string) {
+      if (!this.node) return;
+
+      try {
+        // 获取当前值
+        let currentValue = 0;
+
+        if (this.node.properties && key in this.node.properties) {
+          currentValue = typeof this.node.properties[key] === 'number'
+            ? this.node.properties[key] as number
+            : Number(this.node.properties[key]) || 0;
+        }
+
+        const newValue = currentValue + 1;
+
+        // 尝试直接设置属性
+        this.trySetNodeProperty(key, newValue);
+
+        // 创建副本通知父组件
+        const updatedNode = this.cloneAndUpdateNodeProperty(key, newValue);
+        if (updatedNode) {
+          this.$emit('update', updatedNode);
+        }
+      } catch (error) {
+        console.error('递增数值失败:', error);
+      }
+    },
+
+    decrementNumber(key: string) {
+      if (!this.node) return;
+
+      try {
+        // 获取当前值
+        let currentValue = 0;
+
+        if (this.node.properties && key in this.node.properties) {
+          currentValue = typeof this.node.properties[key] === 'number'
+            ? this.node.properties[key] as number
+            : Number(this.node.properties[key]) || 0;
+        }
+
+        const newValue = currentValue - 1;
+
+        // 尝试直接设置属性
+        this.trySetNodeProperty(key, newValue);
+
+        // 创建副本通知父组件
+        const updatedNode = this.cloneAndUpdateNodeProperty(key, newValue);
+        if (updatedNode) {
+          this.$emit('update', updatedNode);
+        }
+      } catch (error) {
+        console.error('递减数值失败:', error);
+      }
+    },
+
+    isColorProperty(key: string, value: PropertyValue): boolean {
+      // 检查属性名是否包含color关键词
+      if (key.toLowerCase().includes('color') || key.toLowerCase() === 'background' || key.toLowerCase() === 'bgcolor') {
+        return true;
+      }
+      // 检查值是否为颜色格式
+      if (typeof value === 'string') {
+        // CSS颜色格式检测: #000, #000000, rgb(), rgba(), hsl(), hsla()
+        return /^#([0-9A-F]{3}){1,2}$/i.test(value) ||
+          /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i.test(value) ||
+          /^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i.test(value) ||
+          /^hsl\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?\s*\)$/i.test(value) ||
+          /^hsla\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?\s*,\s*[\d.]+\s*\)$/i.test(value);
+      }
+      return false;
+    },
+
+    formatColorValue(value: PropertyValue): string {
+      // 将各种颜色格式转换为HEX格式以兼容color输入
+      if (typeof value !== 'string') {
+        return '#000000';
+      }
+
+      // 已经是HEX格式
+      if (value.startsWith('#')) {
+        // 如果是#RGB格式，转换为#RRGGBB
+        if (value.length === 4) {
+          const r = value[1];
+          const g = value[2];
+          const b = value[3];
+          return `#${r}${r}${g}${g}${b}${b}`;
+        }
+        return value;
+      }
+
+      // 其他格式暂时返回默认黑色
+      // 生产环境中这里可以使用颜色库来做更精确的转换
+      return '#000000';
     },
   },
 })
@@ -524,6 +798,164 @@ input.property-value:focus {
   box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
 }
 
+.select-value {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 30px;
+}
+
+select.property-value {
+  border: 1px solid #444;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #252525;
+  color: #e0e0e0;
+  transition: all 0.2s;
+  font-size: 13px;
+  min-width: 120px;
+  cursor: pointer;
+}
+
+select.property-value:hover {
+  border-color: #555;
+  background-color: #2a2a2a;
+}
+
+select.property-value:focus {
+  outline: none;
+  border-color: #4a6ee0;
+  background-color: #2a2a2a;
+  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+}
+
+/* 自定义下拉列表选项样式 - 仅支持Firefox */
+select.property-value option {
+  background-color: #252525;
+  color: #e0e0e0;
+  padding: 8px;
+}
+
+/* 开关样式 */
+.toggle-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.boolean-value {
+  font-size: 13px;
+  min-width: 40px;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #444;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked+.slider {
+  background-color: #4a6ee0;
+}
+
+input:focus+.slider {
+  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+}
+
+input:checked+.slider:before {
+  transform: translateX(24px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* 数值输入控件样式 */
+.number-input-container {
+  display: flex;
+  align-items: center;
+  max-width: 160px;
+}
+
+.number-value {
+  text-align: center;
+  flex: 1;
+  margin: 0 2px;
+  -moz-appearance: textfield;
+  /* Firefox */
+}
+
+.number-value::-webkit-outer-spin-button,
+.number-value::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.number-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #333;
+  border: 1px solid #444;
+  color: #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.number-btn:hover {
+  background-color: #3a5dd9;
+  border-color: #4a6ee0;
+  color: white;
+}
+
+.number-btn:active {
+  transform: scale(0.95);
+  background-color: #304bb0;
+}
+
 .no-slots {
   color: #666;
   font-style: italic;
@@ -630,5 +1062,29 @@ input.property-value:focus {
 .dialog-body {
   scrollbar-width: thin;
   scrollbar-color: rgba(74, 107, 175, 0.6) rgba(0, 0, 0, 0.2);
+}
+
+/* 颜色选择器样式 */
+.color-picker {
+  width: 80px;
+  height: 32px;
+  padding: 2px;
+  background-color: transparent;
+  border: 1px solid #444;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-picker:hover {
+  transform: scale(1.05);
+  border-color: #555;
+}
+
+.color-picker:focus {
+  outline: none;
+  border-color: #4a6ee0;
+  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
 }
 </style>

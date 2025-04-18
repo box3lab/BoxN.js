@@ -2038,3 +2038,338 @@ document.querySelector('.lgraphcanvas').addEventListener('mouseleave', function(
 }
 
 /* Rest of existing styles... */
+
+/* Subgraph Dialog Styles - 修复选择器和增强效果 */
+.litegraph.dialog.subgraph_dialog,
+.litegraph .dialog.subgraph_dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 450px;
+  min-height: 300px;
+  background: linear-gradient(135deg, rgba(45, 45, 68, 0.95), rgba(37, 37, 54, 0.95));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 12px;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 20px rgba(107, 138, 255, 0.1) inset;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  color: #e0e0ff;
+  animation: dialog-appear 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  overflow: hidden;
+  width: auto !important;
+}
+
+.litegraph.dialog.subgraph_dialog::before,
+.litegraph .dialog.subgraph_dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(107, 138, 255, 0.4), transparent);
+  opacity: 0.7;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-header,
+.litegraph .dialog.subgraph_dialog .dialog-header {
+  color: #e0e0ff;
+  background: linear-gradient(to right, #252536, #2d2d44);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-header::after,
+.litegraph .dialog.subgraph_dialog .dialog-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 93, 217, 0.1) 0%,
+    rgba(74, 110, 224, 0.5) 50%,
+    rgba(58, 93, 217, 0.1) 100%
+  );
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-title,
+.litegraph .dialog.subgraph_dialog .dialog-title {
+  font:
+    18px 'Inter',
+    'Roboto',
+    sans-serif;
+  margin: 0;
+  padding: 10px;
+  display: inline-block;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content,
+.litegraph .dialog.subgraph_dialog .dialog-content {
+  height: calc(100% - 110px);
+  width: 100%;
+  min-height: 100px;
+  display: inline-block;
+  color: #e0e0ff;
+  overflow: auto;
+  padding: 15px 20px;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-track,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb {
+  background: rgba(74, 107, 175, 0.6);
+  border-radius: 4px;
+  border: 2px solid rgba(20, 20, 35, 0.8);
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb:hover,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 107, 175, 0.8);
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-footer,
+.litegraph .dialog.subgraph_dialog .dialog-footer {
+  height: 60px;
+  padding: 10px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-footer::before,
+.litegraph .dialog.subgraph_dialog .dialog-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 93, 217, 0.1) 0%,
+    rgba(74, 110, 224, 0.5) 50%,
+    rgba(58, 93, 217, 0.1) 100%
+  );
+}
+
+.litegraph.dialog.subgraph_dialog .close,
+.litegraph .dialog.subgraph_dialog .close {
+  float: right;
+  margin: 12px;
+  margin-right: 15px;
+  cursor: pointer;
+  font-size: 1.5em;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.litegraph.dialog.subgraph_dialog .close:hover,
+.litegraph .dialog.subgraph_dialog .close:hover {
+  color: white;
+  transform: rotate(90deg);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.litegraph.dialog.subgraph_dialog input,
+.litegraph.dialog.subgraph_dialog select,
+.litegraph .dialog.subgraph_dialog input,
+.litegraph .dialog.subgraph_dialog select {
+  width: 180px;
+  color: #e0e0ff;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-right: 10px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) inset;
+}
+
+.litegraph.dialog.subgraph_dialog input:focus,
+.litegraph.dialog.subgraph_dialog select:focus,
+.litegraph .dialog.subgraph_dialog input:focus,
+.litegraph .dialog.subgraph_dialog select:focus {
+  border-color: rgba(107, 138, 255, 0.5);
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(107, 138, 255, 0.25),
+    0 2px 5px rgba(0, 0, 0, 0.1) inset;
+  transform: translateY(-1px);
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property,
+.litegraph .dialog.subgraph_dialog .subgraph_property {
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(20, 20, 35, 0.2);
+  border: 1px solid rgba(74, 107, 175, 0.05);
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property::before,
+.litegraph .dialog.subgraph_dialog .subgraph_property::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(107, 138, 255, 0.05), transparent);
+  opacity: 0;
+  transition: all 0.8s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property:hover,
+.litegraph .dialog.subgraph_dialog .subgraph_property:hover {
+  background-color: rgba(30, 30, 50, 0.3);
+  border-color: rgba(74, 107, 175, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property:hover::before,
+.litegraph .dialog.subgraph_dialog .subgraph_property:hover::before {
+  left: 100%;
+  opacity: 1;
+}
+
+/* 特别增强 extra 属性样式 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra {
+  margin-top: 15px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  position: relative;
+  width: calc(100% - 24px);
+  max-width: 600px;
+}
+
+/* 移除左侧边框 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra::before,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra::before {
+  display: none;
+}
+
+/* 移除之前的行容器样式 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra .top-row,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra .top-row,
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra .bottom-row,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra .bottom-row {
+  display: contents;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input {
+  width: 110px;
+  padding: 5px 10px;
+  font-size: 12px;
+  height: 26px;
+  margin: 0;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0ff;
+  transition: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input:focus,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+  outline: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra span.label,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra span.label {
+  min-width: 40px;
+  font-size: 17px;
+  padding: 0 5px;
+  height: 22px;
+  line-height: 22px;
+  margin: 0;
+  white-space: nowrap;
+  background: none;
+  color: #c4d3ff;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra button,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra button {
+  padding: 5px 12px;
+  font-size: 12px;
+  height: 26px;
+  min-width: 70px;
+  border-radius: 4px;
+  margin-left: auto;
+  background-color: rgba(40, 40, 60, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #c4d3ff;
+  transition: none;
+  box-shadow: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra button:hover,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra button:hover {
+  background-color: rgba(50, 50, 70, 0.7);
+  transform: none;
+  box-shadow: none;
+}
+
+/* 确保name的输入框和type的输入框紧凑排列 - 横向布局不需要特殊处理 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input.name,
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input.type,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input.name,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input.type {
+  width: 110px;
+  margin: 0;
+}
