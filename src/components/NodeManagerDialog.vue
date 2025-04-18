@@ -757,13 +757,14 @@ export default defineComponent({
 
       // 为每个检测到的类创建一个节点
       for (const className of detectedClasses.value) {
-        // 构建节点类型路径 - 使用import前缀标识导入节点
-        // 修改这里，保留原始路径结构，但添加import前缀
+        // 使用文件名（去除扩展名）
         const fileName = uploadedFileName.value.replace(/\.[^/.]+$/, "");
-        const nodeType = `import/${fileName}/${className}`;
 
-        // 创建节点
-        const success = await createNodeFile(className, nodeType, importedCode.value);
+        // 使用提取到的类名作为nodeType
+        const nodeType = className;
+
+        // 调用createNodeFile并传递文件名作为第5个参数
+        const success = await createNodeFile(className, nodeType, importedCode.value, false, fileName);
 
         if (success) {
           successCount++;
@@ -857,18 +858,22 @@ export default defineComponent({
     // 计算类别数量
     const categoryCounts = computed(() => {
       const counts: Record<string, number> = {}
-      customNodes.value.forEach(node => {
+
+      customNodes.value.forEach((node: NodeDefinition) => {
         if (node.category) {
           counts[node.category] = (counts[node.category] || 0) + 1
         }
       })
+
       return counts
     })
 
     // 过滤掉没有节点的分类
     const filteredCategories = computed(() => {
       return availableCategories.value.filter(category =>
-        categoryCounts.value[category] && categoryCounts.value[category] > 0
+        customNodes.value.some((node: NodeDefinition) =>
+          node.category === category
+        )
       )
     })
 
@@ -880,9 +885,11 @@ export default defineComponent({
         custom: 0
       }
 
-      customNodes.value.forEach(node => {
+      customNodes.value.forEach((node: NodeDefinition) => {
         const source = getNodeSource(node)
-        counts[source]++
+        if (source && counts.hasOwnProperty(source)) {
+          counts[source]++
+        }
       })
 
       return counts
