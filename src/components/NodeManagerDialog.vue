@@ -33,10 +33,10 @@
                   分类
                 </div>
                 <div class="category-filters">
-                  <div v-for="(category, index) in availableCategories" :key="index" class="category-filter"
+                  <div v-for="category in filteredCategories" :key="category" class="category-filter"
                     :class="{ active: selectedCategories.includes(category) }" @click="toggleCategory(category)">
                     <span class="category-name">{{ category }}</span>
-                    <span class="count">{{ categoryCounts[category] || 0 }}</span>
+                    <span class="count">{{ categoryCounts[category] }}</span>
                   </div>
                 </div>
               </div>
@@ -46,15 +46,23 @@
                   来源
                 </div>
                 <div class="category-filters">
-                  <label class="category-filter source-builtin"
-                    :class="{ active: selectedSources.includes('builtin') }">
+                  <label class="category-filter source-builtin" :class="{ active: selectedSources.includes('builtin') }"
+                    v-if="sourceTypeCounts.builtin > 0">
                     <input type="checkbox" value="builtin" v-model="selectedSources" />
                     <span class="category-name">内置</span>
+                    <span class="count">{{ sourceTypeCounts.builtin }}</span>
                   </label>
                   <label class="category-filter source-imported"
-                    :class="{ active: selectedSources.includes('imported') }">
+                    :class="{ active: selectedSources.includes('imported') }" v-if="sourceTypeCounts.imported > 0">
                     <input type="checkbox" value="imported" v-model="selectedSources" />
                     <span class="category-name">导入</span>
+                    <span class="count">{{ sourceTypeCounts.imported }}</span>
+                  </label>
+                  <label class="category-filter source-custom" :class="{ active: selectedSources.includes('custom') }"
+                    v-if="sourceTypeCounts.custom > 0">
+                    <input type="checkbox" value="custom" v-model="selectedSources" />
+                    <span class="category-name">自定义</span>
+                    <span class="count">{{ sourceTypeCounts.custom }}</span>
                   </label>
                 </div>
               </div>
@@ -67,19 +75,33 @@
                   <p>没有找到匹配的节点</p>
                 </div>
                 <div v-else class="nodes-list">
-                  <div v-for="node in filteredNodes" :key="node.nodeType" class="node-card" @click="selectNode(node)"
-                    :class="{ 'selected': selectedNode === node }">
-                    <div class="node-card-header">
-                      <div class="node-name">{{ node.className }}</div>
-                      <div class="node-source-badge" :class="getNodeSourceClass(node)">
-                        {{ getNodeSourceLabel(node) }}
+                  <!-- 节点组显示 -->
+                  <template v-for="(nodes, groupKey) in groupedNodes" :key="groupKey">
+                    <!-- 显示节点组标题（仅为导入节点组） -->
+                    <div v-if="groupKey !== 'ungrouped' && nodes.length > 0" class="node-group-header">
+                      <div class="group-icon">📦</div>
+                      <div class="group-title">{{ groupKey }}</div>
+                      <div class="group-count">{{ nodes.length }}个节点</div>
+                      <button class="group-delete-btn" @click.stop="confirmDeleteGroup(groupKey, nodes)" title="删除整组节点">
+                        <span class="delete-icon">🗑️</span>
+                      </button>
+                    </div>
+
+                    <!-- 显示该组中的节点 -->
+                    <div v-for="node in nodes" :key="node.nodeType" class="node-card" @click="selectNode(node)"
+                      :class="{ 'selected': selectedNode === node }">
+                      <div class="node-card-header">
+                        <div class="node-name">{{ node.className }}</div>
+                        <div class="node-source-badge" :class="getNodeSourceClass(node)">
+                          {{ getNodeSourceLabel(node) }}
+                        </div>
+                      </div>
+                      <div class="node-path">{{ node.nodeType }}</div>
+                      <div class="node-meta">
+                        <div class="node-category">{{ node.category }}</div>
                       </div>
                     </div>
-                    <div class="node-path">{{ node.nodeType }}</div>
-                    <div class="node-meta">
-                      <div class="node-category">{{ node.category }}</div>
-                    </div>
-                  </div>
+                  </template>
                 </div>
               </div>
 
@@ -103,7 +125,8 @@
                   <div class="node-info-item">
                     <span class="info-label">路径:</span>
                     <span class="info-value path-value clickable" @click="copyToClipboard(selectedNode.nodeType)"
-                      title="点击复制">{{ selectedNode.nodeType }}</span>
+                      title="点击复制">{{
+                        selectedNode.nodeType }}</span>
                   </div>
                   <div class="node-info-item">
                     <span class="info-label">来源:</span>
@@ -120,24 +143,17 @@
 
                 <h4 class="code-section-title">节点代码</h4>
                 <div class="node-code" :class="{ 'builtin-code': getNodeSource(selectedNode) === 'builtin' }">
-                  <pre v-if="getNodeSource(selectedNode) !== 'builtin'"><code>{{ selectedNode.code }}</code></pre>
+                  <div v-if="getNodeSource(selectedNode) !== 'builtin'" class="code-container">
+
+                    <pre class="code-editor"><code v-html="highlightedNodeCode"></code></pre>
+                  </div>
                   <div v-else class="builtin-code-placeholder">
                     <div class="placeholder-icon">🔒</div>
                     <p>内置节点代码不可查看</p>
                     <small>内置节点是系统预设的基础功能，无法查看或修改其源代码</small>
                   </div>
                 </div>
-                <div class="action-buttons">
 
-                  <button class="action-btn preview-btn" @click="previewNode"
-                    v-if="getNodeSource(selectedNode) !== 'builtin'">
-                    <span class="btn-icon">👁️</span> 预览节点
-                  </button>
-                  <button class="action-btn delete-btn" @click="confirmDeleteNode"
-                    v-if="getNodeSource(selectedNode) !== 'builtin'">
-                    <span class="btn-icon">🗑️</span> 删除节点
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -248,10 +264,14 @@
     <div v-if="showDeleteConfirmation" class="confirmation-dialog">
       <div class="confirmation-content">
         <h3>确认删除</h3>
-        <p>确定要删除节点 "{{ selectedNode?.className }}" 吗？此操作不可恢复。</p>
+        <p v-if="!isGroupDelete">确定要删除节点 "{{ selectedNode?.className }}" 吗？此操作不可恢复。</p>
+        <p v-else>确定要删除 "{{ selectedGroupName }}" 组中的全部 {{ selectedGroupNodes.length }} 个节点吗？此操作不可恢复。</p>
         <div class="confirmation-actions">
           <button class="action-btn cancel-btn" @click="showDeleteConfirmation = false">取消</button>
-          <button class="action-btn delete-btn" @click="deleteNode">删除</button>
+          <button v-if="!isGroupDelete" class="action-btn delete-btn" @click="deleteNode">删除</button>
+          <button v-else class="action-btn delete-btn" @click="deleteNodeGroup">
+            <span class="btn-icon">🗑️</span> 删除整组
+          </button>
         </div>
       </div>
     </div>
@@ -319,7 +339,7 @@ import { getAllCustomNodes, createNodeFile, getNodeCategories, deleteCustomNode 
 import LiteGraph from '../services/liteGraphCfg'
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
-import 'highlight.js/styles/atom-one-dark.css';
+
 
 // 注册JavaScript语言支持
 hljs.registerLanguage('javascript', javascript);
@@ -331,6 +351,7 @@ interface NodeDefinition {
   code: string
   nodeType: string
   createdAt: number
+  sourceFile?: string // 添加源文件属性
 }
 
 // 从代码中提取类名
@@ -344,6 +365,21 @@ const extractClassNames = (code: string): string[] => {
   }
 
   return classNames
+}
+
+// 新增: 计算节点的源文件名
+const getSourceFilePath = (node: NodeDefinition): string => {
+  // 处理内置节点
+  if (node.nodeType.startsWith('import/')) {
+    // 导入节点: 从nodeType提取文件路径部分
+    const parts = node.nodeType.split('/');
+    if (parts.length > 2) {
+      return parts.slice(1, -1).join('/');
+    }
+  }
+
+  // 内置节点或自定义节点
+  return node.nodeType.split('/')[0];
 }
 
 export default defineComponent({
@@ -385,8 +421,17 @@ export default defineComponent({
       return hljs.highlight(importedCode.value, { language: 'javascript' }).value;
     });
 
+    // 节点详情代码高亮
+    const highlightedNodeCode = computed(() => {
+      if (!selectedNode.value || !selectedNode.value.code) return '';
+      return hljs.highlight(selectedNode.value.code, { language: 'javascript' }).value;
+    });
+
     // 删除确认
     const showDeleteConfirmation = ref(false)
+    const isGroupDelete = ref(false)
+    const selectedGroupName = ref('')
+    const selectedGroupNodes = ref<NodeDefinition[]>([])
 
     // 通知
     const notification = ref<{ message: string, type: 'success' | 'error' } | null>(null)
@@ -583,26 +628,53 @@ export default defineComponent({
     // 确认删除节点
     const confirmDeleteNode = () => {
       if (!selectedNode.value) return
+      isGroupDelete.value = false
       showDeleteConfirmation.value = true
     }
 
-    // 删除节点
-    const deleteNode = () => {
-      if (!selectedNode.value) return
+    // 确认删除节点组
+    const confirmDeleteGroup = (groupName: string, nodes: NodeDefinition[]) => {
+      isGroupDelete.value = true
+      selectedGroupName.value = groupName
+      selectedGroupNodes.value = nodes
+      showDeleteConfirmation.value = true
+    }
 
-      const success = deleteCustomNode(selectedNode.value.nodeType)
+    // 删除节点组
+    const deleteNodeGroup = async () => {
+      if (selectedGroupNodes.value.length === 0) return
 
-      if (success) {
-        emit('node-deleted', selectedNode.value.nodeType)
-        showNotification(`节点 ${selectedNode.value.className} 已删除`, 'success')
+      let successCount = 0
+      const failedNodes: string[] = []
 
-        // 更新列表
-        loadCustomNodes()
-        selectedNode.value = null
-      } else {
-        showNotification('删除节点失败', 'error')
+      // 遍历删除组内所有节点
+      for (const node of selectedGroupNodes.value) {
+        const success = deleteCustomNode(node.nodeType)
+        if (success) {
+          successCount++
+          emit('node-deleted', node.nodeType)
+        } else {
+          failedNodes.push(node.className)
+        }
       }
 
+      // 显示结果通知
+      if (successCount === selectedGroupNodes.value.length) {
+        showNotification(`成功删除 "${selectedGroupName.value}" 组中的所有 ${successCount} 个节点`, 'success')
+      } else if (successCount > 0) {
+        showNotification(`部分删除成功：已删除 ${successCount}/${selectedGroupNodes.value.length} 个节点`, 'success')
+      } else {
+        showNotification('删除节点组失败', 'error')
+      }
+
+      // 如果有失败的节点，显示详情
+      if (failedNodes.length > 0) {
+        console.error('以下节点删除失败:', failedNodes)
+      }
+
+      // 更新列表
+      loadCustomNodes()
+      selectedNode.value = null
       showDeleteConfirmation.value = false
     }
 
@@ -655,6 +727,26 @@ export default defineComponent({
       reader.readAsText(file);
     };
 
+    // 删除节点
+    const deleteNode = () => {
+      if (!selectedNode.value) return
+
+      const success = deleteCustomNode(selectedNode.value.nodeType)
+
+      if (success) {
+        emit('node-deleted', selectedNode.value.nodeType)
+        showNotification(`节点 ${selectedNode.value.className} 已删除`, 'success')
+
+        // 更新列表
+        loadCustomNodes()
+        selectedNode.value = null
+      } else {
+        showNotification('删除节点失败', 'error')
+      }
+
+      showDeleteConfirmation.value = false
+    }
+
     // 导入节点
     const isImporting = ref(false);
     const importNodes = async () => {
@@ -666,7 +758,9 @@ export default defineComponent({
       // 为每个检测到的类创建一个节点
       for (const className of detectedClasses.value) {
         // 构建节点类型路径 - 使用import前缀标识导入节点
-        const nodeType = `import/${className.toLowerCase()}`;
+        // 修改这里，保留原始路径结构，但添加import前缀
+        const fileName = uploadedFileName.value.replace(/\.[^/.]+$/, "");
+        const nodeType = `import/${fileName}/${className}`;
 
         // 创建节点
         const success = await createNodeFile(className, nodeType, importedCode.value);
@@ -771,6 +865,29 @@ export default defineComponent({
       return counts
     })
 
+    // 过滤掉没有节点的分类
+    const filteredCategories = computed(() => {
+      return availableCategories.value.filter(category =>
+        categoryCounts.value[category] && categoryCounts.value[category] > 0
+      )
+    })
+
+    // 计算来源类型数量
+    const sourceTypeCounts = computed(() => {
+      const counts = {
+        builtin: 0,
+        imported: 0,
+        custom: 0
+      }
+
+      customNodes.value.forEach(node => {
+        const source = getNodeSource(node)
+        counts[source]++
+      })
+
+      return counts
+    })
+
     // 处理输入插槽点击
     const handleInputClick = (input: { name: string, type: string }) => {
       showNotification(`点击了输入: ${input.name} (${input.type})`, 'success')
@@ -797,6 +914,53 @@ export default defineComponent({
       loadCustomNodes()
     })
 
+    // 新增: 节点分组功能
+    const groupedNodes = computed(() => {
+      // 首先应用过滤
+      const filtered = filteredNodes.value;
+
+      // 仅对导入的节点进行分组
+      if (!filtered.some(node => getNodeSource(node) === 'imported')) {
+        return { ungrouped: filtered };
+      }
+
+      const groups: Record<string, NodeDefinition[]> = {
+        ungrouped: []
+      };
+
+      // 对过滤后的节点按源文件分组
+      for (const node of filtered) {
+        const source = getNodeSource(node);
+
+        if (source === 'imported') {
+          // 导入节点按源文件分组
+          // 保留原始路径结构，包括子目录
+          const parts = node.nodeType.split('/');
+
+          // 移除"import/"前缀
+          parts.shift();
+
+          // 获取文件路径(排除最后的节点名称)
+          if (parts.length > 1) {
+            // 将除最后一部分外的所有部分作为源文件路径
+            const sourcePath = parts.slice(0, -1).join('/');
+            if (!groups[sourcePath]) {
+              groups[sourcePath] = [];
+            }
+            groups[sourcePath].push(node);
+          } else {
+            // 如果没有子路径部分，放入未分组
+            groups.ungrouped.push(node);
+          }
+        } else {
+          // 其他节点放入未分组列表
+          groups.ungrouped.push(node);
+        }
+      }
+
+      return groups;
+    });
+
     return {
       activeTab,
       customNodes,
@@ -806,12 +970,18 @@ export default defineComponent({
       selectedCategories,
       selectedSources,
       filteredNodes,
+      groupedNodes, // 添加分组后的节点
+      filteredCategories, // 添加过滤后的分类
       importedCode,
       detectedClasses,
       isDragging,
       fileInput,
       highlightedCode,
+      highlightedNodeCode,
       showDeleteConfirmation,
+      isGroupDelete,
+      selectedGroupName,
+      selectedGroupNodes,
       notification,
       showPreview,
       previewNodeData,
@@ -825,6 +995,8 @@ export default defineComponent({
       previewNode,
       confirmDeleteNode,
       deleteNode,
+      confirmDeleteGroup,
+      deleteNodeGroup,
       triggerFileUpload,
       handleFileSelect,
       handleFileDrop,
@@ -834,8 +1006,10 @@ export default defineComponent({
       getNodeSource,
       getNodeSourceClass,
       getNodeSourceLabel,
+      getSourceFilePath, // 添加源文件路径方法
       toggleCategory,
       categoryCounts,
+      sourceTypeCounts,
       handleInputClick,
       handleOutputClick,
       copyToClipboard,
@@ -1101,6 +1275,8 @@ export default defineComponent({
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .node-card:hover {
@@ -1167,61 +1343,58 @@ export default defineComponent({
 .node-source-badge {
   color: cornflowerblue;
   font-size: 11px;
-  padding: 3px 8px;
+  padding: 4px 10px 4px 26px;
   border-radius: 12px;
   position: relative;
-  padding-left: 22px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.node-source-badge.imported {
-  background-color: rgba(255, 193, 7, 0.15);
+.node-source-badge.imported-node {
+  background-color: rgba(255, 193, 7, 0.25);
   color: #ffc107;
+  border-left: 3px solid #ffc107;
 }
 
-.node-source-badge.imported::before {
-  content: '';
+.node-source-badge.imported-node::before {
+  content: '📦';
   position: absolute;
-  left: 6px;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffc107"><path d="M3 14h4v-4H3v4zm0 5h4v-4H3v4zM3 9h4V5H3v4zm5 5h13v-4H8v4zm0 5h13v-4H8v4zM8 5v4h13V5H8z"/></svg>');
-  background-size: contain;
+  font-size: 12px;
 }
 
-.node-source-badge.custom {
-  background-color: rgba(75, 123, 236, 0.15);
+.node-source-badge.custom-node {
+  background-color: rgba(75, 123, 236, 0.25);
   color: #4b7bec;
+  border-left: 3px solid #4b7bec;
 }
 
-.node-source-badge.custom::before {
-  content: '';
+.node-source-badge.custom-node::before {
+  content: '⚙️';
   position: absolute;
-  left: 6px;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234b7bec"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>');
-  background-size: contain;
+  font-size: 12px;
 }
 
-.node-source-badge.builtin {
-  background-color: rgba(46, 213, 115, 0.15);
+.node-source-badge.builtin-node {
+  background-color: rgba(46, 213, 115, 0.25);
   color: #2ed573;
+  border-left: 3px solid #2ed573;
 }
 
-.node-source-badge.builtin::before {
-  content: '';
+.node-source-badge.builtin-node::before {
+  content: '🔧';
   position: absolute;
-  left: 6px;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232ed573"><path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>');
-  background-size: contain;
+  font-size: 12px;
 }
 
 .empty-state {
@@ -1369,26 +1542,12 @@ export default defineComponent({
 }
 
 .node-code {
-  background-color: rgba(10, 10, 20, 0.7);
-  border-radius: 10px;
-  padding: 16px;
-  overflow: auto;
+  background-color: transparent;
+  padding: 0;
   margin-bottom: 20px;
-  max-height: 400px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(42, 42, 61, 0.6);
-}
-
-.node-code pre {
-  margin: 0;
-  white-space: pre-wrap;
-}
-
-.node-code code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: #e1e1e1;
-  line-height: 1.5;
+  max-height: none;
+  box-shadow: none;
+  border: none;
 }
 
 .action-buttons {
@@ -1479,32 +1638,42 @@ export default defineComponent({
 .filter-sidebar::-webkit-scrollbar,
 .nodes-list-container::-webkit-scrollbar,
 .node-details::-webkit-scrollbar,
-.node-code::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.code-editor::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
 .filter-sidebar::-webkit-scrollbar-track,
 .nodes-list-container::-webkit-scrollbar-track,
 .node-details::-webkit-scrollbar-track,
-.node-code::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+.code-editor::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
 }
 
 .filter-sidebar::-webkit-scrollbar-thumb,
 .nodes-list-container::-webkit-scrollbar-thumb,
 .node-details::-webkit-scrollbar-thumb,
-.node-code::-webkit-scrollbar-thumb {
-  background: rgba(74, 107, 175, 0.5);
-  border-radius: 3px;
+.code-editor::-webkit-scrollbar-thumb {
+  background: rgba(74, 107, 175, 0.6);
+  border-radius: 4px;
+  border: 2px solid rgba(20, 20, 35, 0.8);
 }
 
 .filter-sidebar::-webkit-scrollbar-thumb:hover,
 .nodes-list-container::-webkit-scrollbar-thumb:hover,
 .node-details::-webkit-scrollbar-thumb:hover,
-.node-code::-webkit-scrollbar-thumb:hover {
+.code-editor::-webkit-scrollbar-thumb:hover {
   background: rgba(74, 107, 175, 0.8);
+}
+
+/* Firefox滚动条样式 */
+.filter-sidebar,
+.nodes-list-container,
+.node-details,
+.code-editor {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 107, 175, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 /* 内置节点代码占位符样式 */
@@ -1517,19 +1686,23 @@ export default defineComponent({
   min-height: 200px;
   padding: 20px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: #8b949e;
+  background-color: #0d1117;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .placeholder-icon {
   font-size: 48px;
   margin-bottom: 15px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #8b949e;
 }
 
 .builtin-code-placeholder p {
   font-size: 16px;
   margin: 0 0 8px 0;
   font-weight: 500;
+  color: #c9d1d9;
 }
 
 .builtin-code-placeholder small {
@@ -1541,7 +1714,7 @@ export default defineComponent({
 
 .builtin-code {
   display: flex;
-  background-color: rgba(10, 10, 20, 0.5);
+  background-color: transparent;
 }
 
 /* 美化节点项 */
@@ -2485,6 +2658,10 @@ export default defineComponent({
   text-decoration: underline;
 }
 
+code {
+  color: #ffffff;
+}
+
 .info-value.clickable:hover::after {
   content: "📋";
   font-size: 14px;
@@ -3063,5 +3240,350 @@ export default defineComponent({
 
 .detected-classes-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, rgba(74, 107, 175, 0.7), rgba(93, 120, 180, 0.9));
+}
+
+/* 来源筛选增强样式 */
+.source-builtin {
+  border-left: 3px solid #2ed573;
+  padding-left: 28px;
+  position: relative;
+}
+
+.source-builtin:before {
+  content: '🔧';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.source-builtin.active {
+  background-color: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+  font-weight: 500;
+}
+
+.source-imported {
+  border-left: 3px solid #ffc107;
+  padding-left: 28px;
+  position: relative;
+}
+
+.source-imported:before {
+  content: '📦';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.source-imported.active {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  font-weight: 500;
+}
+
+/* 添加自定义来源筛选样式 */
+.source-custom {
+  border-left: 3px solid #4b7bec;
+  padding-left: 28px;
+  position: relative;
+}
+
+.source-custom:before {
+  content: '⚙️';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.source-custom.active {
+  background-color: rgba(75, 123, 236, 0.2);
+  color: #4b7bec;
+  font-weight: 500;
+}
+
+/* 添加顶部来源指示条 */
+.node-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+}
+
+.node-card:has(.node-source-badge.builtin-node)::after {
+  background: linear-gradient(90deg, #2ed573, transparent);
+}
+
+.node-card:has(.node-source-badge.custom-node)::after {
+  background: linear-gradient(90deg, #4b7bec, transparent);
+}
+
+.node-card:has(.node-source-badge.imported-node)::after {
+  background: linear-gradient(90deg, #ffc107, transparent);
+}
+
+.node-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background-color: rgba(10, 10, 20, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px 6px 0 0;
+}
+
+.group-icon {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.group-title {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.group-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 节点组样式 */
+.node-group-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: linear-gradient(90deg, rgba(20, 20, 35, 0.8), rgba(30, 30, 50, 0.5));
+  border-left: 3px solid #ffc107;
+  margin: 20px 0 10px 0;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.group-icon {
+  font-size: 18px;
+  margin-right: 10px;
+  color: #ffc107;
+}
+
+.group-title {
+  font-size: 16px;
+  color: #ffffff;
+  font-weight: 600;
+  flex: 1;
+}
+
+.group-count {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin-right: 10px;
+}
+
+/* 节点组删除按钮 */
+.group-delete-btn {
+  background-color: rgba(168, 50, 50, 0.2);
+  border: none;
+  color: #ff5f5f;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.group-delete-btn:hover {
+  background-color: rgba(168, 50, 50, 0.4);
+  color: #ff7070;
+}
+
+.delete-icon {
+  font-size: 16px;
+}
+
+/* 确保节点组内的节点卡片有合适的间距 */
+.node-group-header+.node-card {
+  margin-top: 0;
+}
+
+/* 节点组中的卡片特殊样式 */
+.node-card {
+  margin-bottom: 10px;
+}
+
+/* 节点列表的网格布局 */
+.nodes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 15px;
+}
+
+/* 使分组标题占据整行 */
+.node-group-header {
+  grid-column: 1 / -1;
+}
+
+/* 添加代码容器和高亮样式 */
+.code-container {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  background-color: #0d1117;
+  margin-bottom: 16px;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background-color: #161b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-dots {
+  display: flex;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.code-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.code-dot.red {
+  background-color: #ff5f56;
+}
+
+.code-dot.yellow {
+  background-color: #ffbd2e;
+}
+
+.code-dot.green {
+  background-color: #27c93f;
+}
+
+.code-title {
+  flex: 1;
+  font-size: 13px;
+  color: #8b949e;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.code-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.code-action-btn {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.code-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #c9d1d9;
+}
+
+.action-icon {
+  font-size: 16px;
+}
+
+.code-editor {
+  margin: 0;
+  padding: 16px;
+  background-color: #0d1117;
+  /* 匹配highlighted.css的背景色 */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow: auto;
+  max-height: 400px;
+  border-radius: 0 0 8px 8px;
+}
+
+/* 覆盖highlight.js默认样式 */
+:deep(.hljs) {
+  background-color: transparent !important;
+  padding: 0 !important;
+  color: #f8f8f2 !important;
+}
+
+:deep(.hljs-keyword) {
+  color: #ff79c6 !important;
+  font-weight: bold;
+}
+
+:deep(.hljs-string) {
+  color: #f1fa8c !important;
+}
+
+:deep(.hljs-title) {
+  color: #50fa7b !important;
+  font-weight: bold;
+}
+
+:deep(.hljs-class) {
+  color: #8be9fd !important;
+  font-style: italic;
+}
+
+:deep(.hljs-function) {
+  color: #50fa7b !important;
+}
+
+:deep(.hljs-built_in) {
+  color: #8be9fd !important;
+  font-style: italic;
+}
+
+:deep(.hljs-comment) {
+  color: #6272a4 !important;
+  font-style: italic;
+}
+
+:deep(.hljs-number) {
+  color: #bd93f9 !important;
+}
+
+:deep(.hljs-literal) {
+  color: #bd93f9 !important;
+}
+
+:deep(.hljs-attr),
+:deep(.hljs-selector-id),
+:deep(.hljs-selector-class) {
+  color: #50fa7b !important;
+}
+
+:deep(.hljs-params) {
+  color: #f8f8f2 !important;
+}
+
+:deep(.hljs-variable),
+:deep(.hljs-template-variable) {
+  color: #ffb86c !important;
 }
 </style>

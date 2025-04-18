@@ -1,54 +1,61 @@
 <template>
-  <div v-if="visible" class="node-detail-dialog">
-    <div class="dialog-content">
+  <div v-if="visible" class="node-detail-dialog" @click="close">
+    <div class="dialog-content" @click.stop>
       <div class="dialog-header">
-        <h3>{{ node ? node.title : '节点详情' }}</h3>
+        <div class="header-left">
+          <div class="node-icon">
+            <span class="icon">📊</span>
+          </div>
+          <h3>{{ node ? node.title : '节点详情' }}</h3>
+        </div>
         <button class="close-btn" @click="close">×</button>
       </div>
 
       <div class="dialog-body" v-if="node">
         <div class="node-info">
-          <div class="info-item">
-            <span class="label">类型:</span>
-            <span class="value">{{ node.type }}</span>
+          <div class="info-card">
+            <div class="info-item">
+              <span class="label"><span class="icon-small">🏷️</span> 类型:</span>
+              <span class="value node-type">{{ node.type }}</span>
+            </div>
           </div>
 
-          <div class="info-item" v-if="node.properties">
-            <span class="label">属性:</span>
-            <div class="properties-list">
-              <div v-for="(value, key) in node.properties" :key="key" class="property-item">
-                <span class="property-name">{{ key }}:</span>
-                <input
-                  v-if="isEditable(key, value)"
-                  class="property-value"
-                  :value="value"
-                  @change="updateProperty(key, $event)"
-                />
-                <span v-else class="property-value">{{ formatValue(value) }}</span>
+          <div class="info-card" v-if="node.properties">
+            <div class="info-item">
+              <span class="label"><span class="icon-small">⚙️</span> 属性:</span>
+              <div class="properties-list">
+                <div v-for="(value, key) in node.properties" :key="key" class="property-item">
+                  <span class="property-name">{{ key }}:</span>
+                  <input v-if="isEditable(key, value)" class="property-value" :value="value"
+                    @change="updateProperty(key, $event)" :title="'编辑 ' + key + ' 属性'" />
+                  <span v-else class="property-value readonly" :title="key + ' 不可编辑'">{{ formatValue(value) }}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="info-item">
-            <span class="label">输入:</span>
-            <div class="slots-list">
-              <div v-for="(input, index) in getInputs()" :key="`input-${index}`" class="slot-item">
-                <span class="slot-name">{{ input.name || `输入 ${index}` }}:</span>
-                <span class="slot-type">{{ input.type }}</span>
+          <div class="info-card">
+            <div class="info-item">
+              <span class="label"><span class="icon-small">⬇️</span> 输入:</span>
+              <div class="slots-list">
+                <div v-for="(input, index) in getInputs()" :key="`input-${index}`" class="slot-item">
+                  <span class="slot-name">{{ input.name || `输入 ${index}` }}:</span>
+                  <span class="slot-type" :class="getTypeClass(input.type)">{{ input.type }}</span>
+                </div>
+                <div v-if="getInputs().length === 0" class="no-slots">无输入插槽</div>
               </div>
             </div>
           </div>
 
-          <div class="info-item">
-            <span class="label">输出:</span>
-            <div class="slots-list">
-              <div
-                v-for="(output, index) in getOutputs()"
-                :key="`output-${index}`"
-                class="slot-item"
-              >
-                <span class="slot-name">{{ output.name || `输出 ${index}` }}:</span>
-                <span class="slot-type">{{ output.type }}</span>
+          <div class="info-card">
+            <div class="info-item">
+              <span class="label"><span class="icon-small">⬆️</span> 输出:</span>
+              <div class="slots-list">
+                <div v-for="(output, index) in getOutputs()" :key="`output-${index}`" class="slot-item">
+                  <span class="slot-name">{{ output.name || `输出 ${index}` }}:</span>
+                  <span class="slot-type" :class="getTypeClass(output.type)">{{ output.type }}</span>
+                </div>
+                <div v-if="getOutputs().length === 0" class="no-slots">无输出插槽</div>
               </div>
             </div>
           </div>
@@ -127,6 +134,31 @@ export default defineComponent({
       return String(value)
     },
 
+    getTypeClass(type: string): string {
+      const typeMap: Record<string, string> = {
+        'number': 'type-number',
+        'string': 'type-string',
+        'boolean': 'type-boolean',
+        'object': 'type-object',
+        'array': 'type-array',
+        'color': 'type-color',
+        'vec2': 'type-vector',
+        'vec3': 'type-vector',
+        'vec4': 'type-vector',
+        'event': 'type-event',
+        '未知': 'type-unknown'
+      }
+
+      // 尝试匹配基本类型
+      for (const [key, className] of Object.entries(typeMap)) {
+        if (type.toLowerCase().includes(key.toLowerCase())) {
+          return className
+        }
+      }
+
+      return 'type-default'
+    },
+
     updateProperty(key: string, event: Event) {
       if (!this.node || !this.node.properties) return
 
@@ -199,34 +231,103 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .dialog-content {
-  background-color: #1e1e1e;
-  border-radius: 5px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-  width: 500px;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 1px 0 0 rgba(255, 255, 255, 0.1) inset;
+  width: 550px;
   max-width: 90%;
-  max-height: 80vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #333;
   color: #e0e0e0;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
 }
 
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #333;
-  background-color: #252525;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(90deg, #252530 0%, #1e1e28 100%);
+  position: relative;
+}
+
+.dialog-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+      rgba(58, 93, 217, 0.1) 0%,
+      rgba(74, 110, 224, 0.5) 50%,
+      rgba(58, 93, 217, 0.1) 100%);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.node-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(66, 99, 205, 0.2) 0%, rgba(74, 110, 224, 0.4) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.icon {
+  font-size: 22px;
+}
+
+.icon-small {
+  font-size: 14px;
+  margin-right: 4px;
 }
 
 .dialog-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #e0e0e0;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .close-btn {
@@ -235,84 +336,161 @@ export default defineComponent({
   font-size: 24px;
   cursor: pointer;
   color: #888;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
 .close-btn:hover {
-  color: #ccc;
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
 }
 
 .dialog-body {
-  padding: 20px;
+  padding: 25px;
   overflow-y: auto;
   flex: 1;
-  background-color: #1e1e1e;
+  background-color: #1a1a1a;
 }
 
 .dialog-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #333;
+  padding: 18px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: flex-end;
-  background-color: #252525;
+  background-color: #1e1e28;
+  position: relative;
+}
+
+.dialog-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+      rgba(58, 93, 217, 0.1) 0%,
+      rgba(74, 110, 224, 0.5) 50%,
+      rgba(58, 93, 217, 0.1) 100%);
 }
 
 .btn {
-  padding: 8px 15px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   font-size: 14px;
   background-color: #333;
   color: #e0e0e0;
+  transition: all 0.2s;
+  font-weight: 500;
 }
 
 .btn-primary {
-  background-color: #3a5dd9;
+  background: linear-gradient(90deg, #3a5dd9 0%, #4a6ee0 100%);
   color: white;
+  box-shadow: 0 2px 8px rgba(58, 93, 217, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .btn-primary:hover {
-  background-color: #4a6ee0;
+  background: linear-gradient(90deg, #4a6ee0 0%, #5a7ef0 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(58, 93, 217, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(58, 93, 217, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
 .node-info {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+}
+
+.info-card {
+  background-color: rgba(30, 30, 40, 0.4);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  transition: all 0.3s;
+}
+
+.info-card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  background-color: rgba(36, 36, 48, 0.4);
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
 }
 
 .label {
-  font-weight: bold;
+  font-weight: 600;
   color: #aaa;
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+}
+
+.value {
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.node-type {
+  color: #4a6ee0;
+  background-color: rgba(74, 110, 224, 0.1);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  border-left: 3px solid #4a6ee0;
+  font-weight: 500;
+  display: inline-block;
 }
 
 .properties-list,
 .slots-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-left: 10px;
-  border-left: 2px solid #333;
-  padding-left: 10px;
+  gap: 12px;
+  margin-left: 12px;
+  border-left: 2px solid rgba(74, 110, 224, 0.4);
+  padding-left: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .property-item,
 .slot-item {
   display: flex;
   align-items: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.property-item:hover,
+.slot-item:hover {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .property-name,
 .slot-name {
-  min-width: 100px;
+  min-width: 120px;
   font-weight: 500;
-  color: #bbb;
+  color: #ccc;
+  margin-right: 12px;
 }
 
 .property-value,
@@ -321,16 +499,138 @@ export default defineComponent({
   color: #ddd;
 }
 
+.readonly {
+  opacity: 0.7;
+  font-style: italic;
+}
+
 input.property-value {
   border: 1px solid #444;
-  padding: 5px;
-  border-radius: 3px;
+  padding: 9px 12px;
+  border-radius: 6px;
   background-color: #252525;
   color: #e0e0e0;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+input.property-value:hover {
+  border-color: #555;
+  background-color: #2a2a2a;
 }
 
 input.property-value:focus {
-  outline: 1px solid #4a6ee0;
+  outline: none;
+  border-color: #4a6ee0;
   background-color: #2a2a2a;
+  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+}
+
+.no-slots {
+  color: #666;
+  font-style: italic;
+  padding: 6px 0;
+}
+
+/* 插槽类型徽章 */
+.slot-type {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  min-width: 80px;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.type-number {
+  background-color: rgba(66, 153, 225, 0.15);
+  color: #63b3ed;
+  border-left: 3px solid #63b3ed;
+}
+
+.type-string {
+  background-color: rgba(72, 187, 120, 0.15);
+  color: #68d391;
+  border-left: 3px solid #68d391;
+}
+
+.type-boolean {
+  background-color: rgba(237, 137, 54, 0.15);
+  color: #f6ad55;
+  border-left: 3px solid #f6ad55;
+}
+
+.type-object {
+  background-color: rgba(159, 122, 234, 0.15);
+  color: #b794f4;
+  border-left: 3px solid #b794f4;
+}
+
+.type-array {
+  background-color: rgba(159, 122, 234, 0.15);
+  color: #b794f4;
+  border-left: 3px solid #b794f4;
+}
+
+.type-color {
+  background-color: rgba(237, 100, 166, 0.15);
+  color: #f687b3;
+  border-left: 3px solid #f687b3;
+}
+
+.type-vector {
+  background-color: rgba(246, 173, 85, 0.15);
+  color: #fbd38d;
+  border-left: 3px solid #fbd38d;
+}
+
+.type-event {
+  background-color: rgba(113, 128, 150, 0.15);
+  color: #a0aec0;
+  border-left: 3px solid #a0aec0;
+}
+
+.type-unknown {
+  background-color: rgba(160, 174, 192, 0.15);
+  color: #a0aec0;
+  border-left: 3px solid #a0aec0;
+}
+
+.type-default {
+  background-color: rgba(203, 213, 224, 0.15);
+  color: #cbd5e0;
+  border-left: 3px solid #cbd5e0;
+}
+
+/* 滚动条样式 */
+.dialog-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dialog-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.dialog-body::-webkit-scrollbar-thumb {
+  background: rgba(74, 107, 175, 0.6);
+  border-radius: 4px;
+  border: 2px solid rgba(20, 20, 35, 0.8);
+}
+
+.dialog-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 107, 175, 0.8);
+}
+
+/* Firefox样式 */
+.dialog-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 107, 175, 0.6) rgba(0, 0, 0, 0.2);
 }
 </style>

@@ -55,12 +55,12 @@ export async function createNodeFile(
           // 创建适当的节点类型路径 (如果没有提供完整路径)
           let classNodeType = nodeType
           if (!nodeType.includes('/')) {
-            classNodeType = `import/${nodeType}/${name.toLowerCase()}`
+            classNodeType = `import/${nodeType}/${name}`
           } else if (nodeType.endsWith('/')) {
-            classNodeType = `import/${nodeType}${name.toLowerCase()}`
+            classNodeType = `import/${nodeType}${name}`
           } else {
             const parts = nodeType.split('/')
-            parts[parts.length - 1] = name.toLowerCase()
+            parts[parts.length - 1] = name
             // 确保导入节点路径以"import/"开头
             classNodeType = nodeType.startsWith('import/')
               ? parts.join('/')
@@ -98,7 +98,7 @@ export async function createNodeFile(
       // 使用提供的节点类型或使用默认格式
       let finalNodeType = nodeType
       if (!nodeType.includes('/')) {
-        finalNodeType = `import/${nodeType}/${className.toLowerCase()}`
+        finalNodeType = `import/${nodeType}/${className}`
       } else if (!nodeType.startsWith('import/')) {
         finalNodeType = `import/${nodeType}`
       }
@@ -144,6 +144,10 @@ function evaluateNodeCode(code: string): any {
     // 处理不同的导入语句格式
     // 1 移除import语句
     jsCode = jsCode.replace(/import\s+.*?from\s+(['"]).*?\1;?/g, '// 导入已由系统处理')
+
+    // 移除export语句，这可能导致"Unexpected token 'export'"错误
+    jsCode = jsCode.replace(/export\s+(default\s+)?/g, '')
+    jsCode = jsCode.replace(/export\s+\{.*?\};?/g, '// 导出已由系统处理')
 
     // 2 处理require语句
     jsCode = jsCode.replace(
