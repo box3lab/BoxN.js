@@ -5,44 +5,40 @@
   <div id="toolbar" class="editor-toolbar"></div>
 
   <!-- 悬浮工具箱 -->
-  <FloatingToolbox
-    :initialX="50"
-    :initialY="50"
-    @run="startGraph"
-    @stop="stopGraph"
-    @save="saveGraph"
-    @export="exportToFile"
-    @import="importFromFile"
-  />
+  <FloatingToolbox :initialX="50" :initialY="50" @run="startGraph" @stop="stopGraph" @save="saveGraph"
+    @export="exportToFile" @import="importFromFile" @open-manager="openNodeManager" />
 
   <!-- 节点详情对话框 -->
-  <NodeDetailDialog
-    :visible="showNodeDetails"
-    :node="selectedNode || undefined"
-    @close="closeNodeDetails"
-    @update="handleNodeUpdate"
-  />
+  <NodeDetailDialog :visible="showNodeDetails" :node="selectedNode || undefined" @close="closeNodeDetails"
+    @update="handleNodeUpdate" />
+
+  <!-- 节点管理器对话框 -->
+  <NodeManagerDialog :visible="showNodeManager" @close="closeNodeManager" @node-imported="handleNodeImported"
+    @node-deleted="handleNodeDeleted" />
+
+  <!-- AI聊天助手 -->
+  <AIChatDialog />
 
   <!-- 保存成功提示 -->
   <div v-if="showSaveNotification" class="save-notification">
     <span>图形已保存</span>
   </div>
 
+  <!-- 通用通知组件 -->
+  <div v-if="showNotificationFlag" class="notification" :class="notificationType" ref="notificationElement">
+    {{ notificationMessage }}
+  </div>
+
   <!-- 导出/导入操作的隐藏元素 -->
-  <input
-    type="file"
-    ref="fileInput"
-    class="hidden-file-input"
-    accept=".json"
-    @change="handleFileSelected"
-  />
+  <input type="file" ref="fileInput" class="hidden-file-input" accept=".json" @change="handleFileSelected" />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+//
 import { LGraph, LGraphCanvas, LGraphNode } from 'litegraph.js'
 import '../nodes'
-import 'litegraph.js/css/litegraph.css'
+
 import {
   createGraph,
   importGraph,
@@ -56,6 +52,8 @@ import {
 } from '../services/graphService'
 import NodeDetailDialog from './NodeDetailDialog.vue'
 import FloatingToolbox from './FloatingToolbox.vue'
+import AIChatDialog from './AIChatDialog.vue'
+import NodeManagerDialog from './NodeManagerDialog.vue'
 
 const graph = ref<LGraph | null>(null)
 const graphCanvas = ref<LGraphCanvas | null>(null)
@@ -63,14 +61,21 @@ const showNodeDetails = ref(false)
 const selectedNode = ref<LGraphNode | null>(null)
 const isRunning = ref(false)
 const showSaveNotification = ref(false)
+const notificationMessage = ref('')
+const notificationType = ref<'success' | 'error'>('success')
+const showNotificationFlag = ref(false)
+const notificationElement = ref<HTMLElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 let saveNotificationTimeout: number | null = null
-let fileInput: HTMLInputElement | null = null
+
+// 节点管理器状态
+const showNodeManager = ref(false)
 
 onMounted(() => {
   initLiteGraph()
   window.addEventListener('resize', handleResize)
   window.addEventListener('keydown', handleKeyDown)
-  fileInput = document.querySelector('.hidden-file-input')
+  fileInput.value = document.querySelector('.hidden-file-input')
 })
 
 onBeforeUnmount(() => {
@@ -145,55 +150,64 @@ function loadGraph() {
   }
 }
 
-function exportToFile(customFilename?: string) {
+function exportToFile() {
   if (!graph.value) return
 
   try {
     const jsonData = exportGraph(graph.value as unknown as LGraph)
+
     const blob = new Blob([jsonData], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
 
-    link.href = url
-    link.download = customFilename ? `${customFilename}.json` : 'graph.json'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'graph.json'
+    a.click()
+
+    URL.revokeObjectURL(url)
+
+    showNotification('图形导出成功')
   } catch (error) {
-    console.error('Error exporting graph:', error)
+    console.error('导出图形失败:', error)
   }
 }
 
 function importFromFile() {
-  if (fileInput) {
-    fileInput.click()
+  if (fileInput.value) {
+    fileInput.value.click()
   }
 }
 
-function handleFileSelected(event: Event) {
-  if (!graph.value) return
-
+async function handleFileSelected(event: Event) {
   const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
+  if (!input.files || !input.files[0] || !graph.value) return
 
   const file = input.files[0]
   const reader = new FileReader()
 
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
-      if (e.target?.result && typeof e.target.result === 'string') {
-        importGraph(graph.value as unknown as LGraph, e.target.result)
+      const jsonData = e.target?.result as string
+      if (!jsonData) throw new Error('无法读取文件')
+
+      const success = await importGraph(graph.value as unknown as LGraph, jsonData)
+
+      if (success) {
+        showNotification('图形导入成功')
+        // 重新初始化画布
         if (graphCanvas.value) {
           graphCanvas.value.draw(true, true)
         }
+      } else {
+        showNotification('图形导入失败', 'error')
       }
     } catch (error) {
-      console.error('Error importing graph:', error)
+      console.error('导入图形失败:', error)
+      showNotification('图形导入失败', 'error')
     }
   }
 
   reader.readAsText(file)
-  input.value = '' // 清除文件选择，允许再次选择相同文件
 }
 
 function handleResize() {
@@ -240,6 +254,49 @@ function handleNodeUpdate(node: LGraphNode, properties: Record<string, unknown>)
   if (graphCanvas.value) {
     graphCanvas.value.draw(true, true)
   }
+}
+
+// 节点管理器相关功能
+function openNodeManager() {
+  showNodeManager.value = true
+}
+
+function closeNodeManager() {
+  showNodeManager.value = false
+}
+
+function handleNodeImported(count: number) {
+  showNotification(`已成功导入 ${count} 个节点`, 'success')
+
+  // 刷新画布
+  if (graphCanvas.value) {
+    graphCanvas.value.draw(true, true)
+  }
+}
+
+function handleNodeDeleted(nodeType: string) {
+  showNotification(`已删除节点: ${nodeType}`, 'success')
+
+  // 刷新画布
+  if (graphCanvas.value) {
+    graphCanvas.value.draw(true, true)
+  }
+}
+
+// 显示通知
+function showNotification(message: string, type: 'success' | 'error' = 'success') {
+  notificationMessage.value = message
+  notificationType.value = type
+  showNotificationFlag.value = true
+
+  // 更新通知元素的显示内容
+  if (notificationElement.value) {
+    notificationElement.value.textContent = message;
+  }
+
+  setTimeout(() => {
+    showNotificationFlag.value = false
+  }, 3000)
 }
 </script>
 
@@ -292,5 +349,24 @@ function handleNodeUpdate(node: LGraphNode, properties: Record<string, unknown>)
   #mycanvas {
     touch-action: none;
   }
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  color: white;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.notification.success {
+  background-color: rgba(46, 125, 50, 0.9);
+}
+
+.notification.error {
+  background-color: rgba(198, 40, 40, 0.9);
 }
 </style>
