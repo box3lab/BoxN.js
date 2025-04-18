@@ -866,7 +866,7 @@ export default defineComponent({
           // 针对单个或多个节点创建不同的通知消息
           if (successCount === 1) {
             const node = registeredNodes[0];
-            notificationMessage.value = `节点 ${node.className} 已成功注册为 ${node.path}！使用"${node.path}"搜索可找到此节点`;
+            notificationMessage.value = `节点 ${node.className} 已成功注册为 custom/${node.path}！`;
           } else {
             notificationMessage.value = `成功注册了 ${successCount} 个节点！详见聊天窗口`;
           }

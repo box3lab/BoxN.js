@@ -229,7 +229,7 @@
                   </div>
                   <div class="import-note">
                     <span class="note-icon">ℹ️</span>
-                    系统将保留节点原定义的路径，仅在前面添加 import/ 前缀
+                    系统将保留节点原定义的路径，仅在前面添加 custom/ 前缀
                   </div>
                 </div>
               </div>
@@ -370,7 +370,7 @@ const extractClassNames = (code: string): string[] => {
 // 新增: 计算节点的源文件名
 const getSourceFilePath = (node: NodeDefinition): string => {
   // 处理内置节点
-  if (node.nodeType.startsWith('import/')) {
+  if (node.nodeType.startsWith('custom/')) {
     // 导入节点: 从nodeType提取文件路径部分
     const parts = node.nodeType.split('/');
     if (parts.length > 2) {
@@ -459,8 +459,7 @@ export default defineComponent({
       for (const nodeType of allRegisteredTypes) {
         // 排除已经在自定义节点中的节点
         if (!userCreatedNodes.some(node => node.nodeType === nodeType) &&
-          !nodeType.startsWith('custom/') &&
-          !nodeType.startsWith('import/')) {
+          !nodeType.startsWith('custom/')) {
 
           // Extract the class name directly from the nodeType path
           const nodeName = nodeType.split('/').pop() || ''
@@ -829,12 +828,12 @@ export default defineComponent({
     // 获取节点来源类型
     const getNodeSource = (node: NodeDefinition): 'imported' | 'builtin' | 'custom' => {
       // 检查节点类型路径前缀来确定来源
-      if (node.nodeType.startsWith('import/')) {
+      if (node.nodeType.startsWith('custom/')) {
         return 'imported'
       }
 
-      // 检查是否是自定义节点
-      if (node.nodeType.startsWith('custom/')) {
+      // 检查是否是自定义节点（老版本兼容）
+      if (node.nodeType.includes('custom')) {
         return 'custom'
       }
 
@@ -956,7 +955,7 @@ export default defineComponent({
           // 保留原始路径结构，包括子目录
           const parts = node.nodeType.split('/');
 
-          // 移除"import/"前缀
+          // 移除"custom/"前缀
           parts.shift();
 
           // 获取文件路径(排除最后的节点名称)

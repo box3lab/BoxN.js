@@ -22,7 +22,7 @@ const customNodes: Map<string, NodeDefinition> = new Map()
 const CUSTOM_NODES_METADATA_KEY = '_customNodeDefinitions'
 
 // 标准化的导入前缀
-const IMPORT_PREFIX = 'import/'
+const IMPORT_PREFIX = 'custom/'
 
 /**
  * 构建节点路径
@@ -224,12 +224,12 @@ function extractCategory(nodePath: string): string {
   let category = 'custom'
 
   // 尝试从路径中提取有意义的分类
-  if (parts.length > 2 && parts[0] === 'import') {
+  if (parts.length > 2 && parts[0] === 'custom') {
     // 使用路径中的第三段作为分类（如果存在）
     if (parts.length > 3) {
       category = parts[2]
     } else if (parts.length === 3) {
-      // 如果只有三段 (import/name/class)，那么使用name作为分类
+      // 如果只有三段 (custom/name/class)，那么使用name作为分类
       category = parts[1]
     }
   }
@@ -467,14 +467,14 @@ function parseNodeType(nodeType: string): { fileName: string; originalPath: stri
   let fileName = 'plugin'
   let originalPath = nodeType
 
-  // 检查是否以import/开头
+  // 检查是否以custom/开头
   if (nodeType.startsWith(IMPORT_PREFIX)) {
     // 分割路径，提取文件名
     const parts = nodeType.split('/')
     if (parts.length >= 3) {
-      // 至少: import/filename/nodename
+      // 至少: custom/filename/nodename
       fileName = parts[1]
-      // 重建原始路径 (不包括import/前缀和文件名)
+      // 重建原始路径 (不包括custom/前缀和文件名)
       originalPath = parts.slice(2).join('/')
     }
   }
