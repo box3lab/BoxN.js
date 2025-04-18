@@ -35,9 +35,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+//
 import { LGraph, LGraphCanvas, LGraphNode } from 'litegraph.js'
 import '../nodes'
-import 'litegraph.js/css/litegraph.css'
+
 import {
   createGraph,
   importGraph,

@@ -840,7 +840,7 @@ export default defineComponent({
             }
 
             // 注册节点
-            const success = await createNodeFile(className, nodePath, code, true);
+            const success = await createNodeFile(className, nodePath, code);
 
             if (success) {
               successCount++;

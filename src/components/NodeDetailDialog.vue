@@ -72,8 +72,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-// 使用any类型来兼容实际LiteGraph节点结构
-// import type { LGraphNode } from 'litegraph.js'
 
 // 定义LiteGraph节点输入插槽类型
 interface INodeSlot {

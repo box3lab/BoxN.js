@@ -1,6 +1,6 @@
 /**
  * 节点生成服务
- * 提供AI生成的节点代码管理功能
+ * 提供节点代码管理功能
  */
 import { register } from '../nodes/nodeCfg'
 import LiteGraph from './liteGraphCfg'
@@ -21,23 +21,35 @@ const customNodes: Map<string, NodeDefinition> = new Map()
 // 节点导出元数据的键名
 const CUSTOM_NODES_METADATA_KEY = '_customNodeDefinitions'
 
+// 标准化的导入前缀
+const IMPORT_PREFIX = 'import/'
+
 /**
  * 构建节点路径
- * @param prefix 前缀（如import/）
- * @param fileName 文件名
  * @param nodePath 节点路径
+ * @param fileName 文件名 (可选)
  * @returns 处理后的完整节点路径
  */
-function buildNodePath(prefix: string, fileName: string, nodePath: string): string {
+function buildNodePath(nodePath: string, fileName?: string): string {
+  // 如果已经包含前缀，直接返回
+  if (nodePath.startsWith(IMPORT_PREFIX)) {
+    return nodePath
+  }
+
+  // 如果没有提供文件名或文件名为空，直接添加前缀
+  if (!fileName) {
+    return `${IMPORT_PREFIX}${nodePath}`
+  }
+
   // 提取nodePath的第一段作为可能的类别
   const parts = nodePath.split('/')
   const possibleCategory = parts[0]
 
   // 如果文件名与类别重复，避免添加重复路径段
   if (fileName === possibleCategory) {
-    return `${prefix}${nodePath}`
+    return `${IMPORT_PREFIX}${nodePath}`
   } else {
-    return `${prefix}${fileName}/${nodePath}`
+    return `${IMPORT_PREFIX}${fileName}/${nodePath}`
   }
 }
 
@@ -46,7 +58,6 @@ function buildNodePath(prefix: string, fileName: string, nodePath: string): stri
  * @param className 节点类名
  * @param nodeType 节点类型路径
  * @param code 节点代码
- * @param isAIGenerated 是否为AI生成的代码
  * @param fileName 文件名(不含扩展名)，用于区分不同插件
  * @returns 创建是否成功
  */
@@ -54,7 +65,6 @@ export async function createNodeFile(
   className: string,
   nodeType: string,
   code: string,
-  isAIGenerated: boolean = false,
   fileName: string = '',
 ): Promise<boolean> {
   try {
@@ -69,24 +79,13 @@ export async function createNodeFile(
     const result = evaluateNodeCode(code)
     if (!result) return false
 
-    // 定义通用前缀
-    const prefix = 'import/'
-
     // 处理多个节点类
     if (typeof result === 'object' && !Array.isArray(result) && !(result instanceof Function)) {
-      return registerMultipleNodes(result, nodeType, code, prefix, cleanFileName, isAIGenerated)
+      return registerMultipleNodes(result, nodeType, code, cleanFileName)
     }
 
     // 处理单个节点类
-    return registerSingleNode(
-      result,
-      className,
-      nodeType,
-      code,
-      prefix,
-      cleanFileName,
-      isAIGenerated,
-    )
+    return registerSingleNode(result, className, nodeType, code, cleanFileName)
   } catch (error) {
     console.error('创建节点文件失败:', error)
     return false
@@ -100,9 +99,7 @@ function registerMultipleNodes(
   nodeClasses: Record<string, unknown>,
   nodeType: string,
   code: string,
-  prefix: string,
-  cleanFileName: string,
-  isAIGenerated: boolean,
+  fileName: string,
 ): boolean {
   let successCount = 0
   const classNames = Object.keys(nodeClasses)
@@ -116,16 +113,15 @@ function registerMultipleNodes(
 
     // 如果在代码中找到了registerNodeType指定的路径，优先使用它
     if (NodeClass._originalPath) {
-      classNodeType = `${prefix}${NodeClass._originalPath}`
+      classNodeType = buildNodePath(NodeClass._originalPath)
     }
     // 简单节点名，没有路径结构
     else if (!nodeType.includes('/')) {
-      classNodeType = `${prefix}${cleanFileName}/${name}`
+      classNodeType = buildNodePath(`${fileName}/${name}`)
     }
     // 已有前缀的情况
-    else if (nodeType.startsWith('import/')) {
+    else if (nodeType.startsWith(IMPORT_PREFIX)) {
       classNodeType = nodeType
-
       // 如果类名不同，替换最后一部分
       if (nodeType.split('/').pop() !== name) {
         const parts = nodeType.split('/')
@@ -133,16 +129,15 @@ function registerMultipleNodes(
         classNodeType = parts.join('/')
       }
     }
-    // 其他情况，添加前缀和文件名
+    // 其他情况，生成路径
     else {
-      // 处理节点类型路径
-      classNodeType = buildNodePath(prefix, cleanFileName, nodeType)
-
       // 如果nodeType包含类名，替换最后部分为正确的类名
       if (nodeType.includes('/') && nodeType.split('/').pop() !== name) {
         const parts = nodeType.split('/')
         parts[parts.length - 1] = name
-        classNodeType = buildNodePath(prefix, cleanFileName, parts.join('/'))
+        classNodeType = buildNodePath(parts.join('/'), fileName)
+      } else {
+        classNodeType = buildNodePath(nodeType, fileName)
       }
     }
 
@@ -150,7 +145,7 @@ function registerMultipleNodes(
     register(classNodeType, NodeClass)
 
     // 提取分类并保存节点定义
-    const category = extractCategory(classNodeType, isAIGenerated)
+    const category = extractCategory(classNodeType)
 
     const nodeDefinition: NodeDefinition = {
       className: name,
@@ -176,9 +171,7 @@ function registerSingleNode(
   className: string,
   nodeType: string,
   code: string,
-  prefix: string,
-  cleanFileName: string,
-  isAIGenerated: boolean,
+  fileName: string,
 ): boolean {
   if (!NodeClass) return false
 
@@ -187,25 +180,26 @@ function registerSingleNode(
 
   // 如果在代码中找到了registerNodeType指定的路径，优先使用它
   if (NodeClass._originalPath) {
-    finalNodeType = `${prefix}${NodeClass._originalPath}`
+    finalNodeType = buildNodePath(NodeClass._originalPath)
   }
   // 简单节点名，没有路径结构
   else if (!nodeType.includes('/')) {
-    finalNodeType = `${prefix}${cleanFileName}/${className}`
+    finalNodeType = buildNodePath(`${fileName}/${className}`)
   }
   // 已有前缀的情况
-  else if (nodeType.startsWith('import/')) {
+  else if (nodeType.startsWith(IMPORT_PREFIX)) {
     finalNodeType = nodeType
   }
-  // 其他情况，添加前缀和文件名
+  // 其他情况
   else {
-    finalNodeType = buildNodePath(prefix, cleanFileName, nodeType)
+    finalNodeType = buildNodePath(nodeType, fileName)
   }
+
   // 注册节点
   register(finalNodeType, NodeClass)
 
   // 提取分类并保存节点定义
-  const category = extractCategory(finalNodeType, isAIGenerated)
+  const category = extractCategory(finalNodeType)
 
   const nodeDefinition: NodeDefinition = {
     className,
@@ -223,23 +217,20 @@ function registerSingleNode(
 /**
  * 从节点路径中提取分类
  */
-function extractCategory(nodePath: string, isAIGenerated: boolean): string {
+function extractCategory(nodePath: string): string {
   const parts = nodePath.split('/')
 
   // 默认分类
   let category = 'custom'
 
   // 尝试从路径中提取有意义的分类
-  if (parts.length > 2) {
-    // 跳过import/或ai/前缀和文件名
-    const categoryIndex = parts[0] === 'import' || parts[0] === 'ai' ? 2 : 1
-
-    // 如果是AI生成的，使用特殊分类
-    if (isAIGenerated) {
-      category = 'ai-generated'
-    } else if (categoryIndex < parts.length - 1) {
-      // 使用路径中的第三段作为分类
-      category = parts[categoryIndex]
+  if (parts.length > 2 && parts[0] === 'import') {
+    // 使用路径中的第三段作为分类（如果存在）
+    if (parts.length > 3) {
+      category = parts[2]
+    } else if (parts.length === 3) {
+      // 如果只有三段 (import/name/class)，那么使用name作为分类
+      category = parts[1]
     }
   }
 
@@ -337,9 +328,6 @@ function evaluateNodeCode(code: string): any {
       return { ${classDefinitions.join(', ')} };
     `
 
-    // 打印转换后的代码（调试用）
-    console.debug('转换后的代码:', jsCode)
-
     // 直接使用Function构造器执行代码
     const nodeClasses = Function(
       'LGraphNode',
@@ -391,7 +379,7 @@ function evaluateNodeCode(code: string): any {
  * @returns 节点分类列表
  */
 export function getNodeCategories(): string[] {
-  return ['math', 'logic', 'input', 'output', 'custom', 'ai-generated']
+  return ['math', 'logic', 'input', 'output', 'custom']
 }
 
 /**
@@ -456,16 +444,10 @@ export async function restoreCustomNodesFromImport(
       }
 
       // 解析节点类型
-      const { isAIGenerated, fileName, originalPath } = parseNodeType(nodeDef.nodeType)
+      const { fileName, originalPath } = parseNodeType(nodeDef.nodeType)
 
       // 使用原始路径进行节点注册
-      const success = await createNodeFile(
-        nodeDef.className,
-        originalPath,
-        nodeDef.code,
-        isAIGenerated,
-        fileName,
-      )
+      const success = await createNodeFile(nodeDef.className, originalPath, nodeDef.code, fileName)
 
       if (success) {
         restoredCount++
@@ -481,37 +463,23 @@ export async function restoreCustomNodesFromImport(
 /**
  * 解析节点类型路径
  */
-function parseNodeType(nodeType: string): {
-  isAIGenerated: boolean
-  fileName: string
-  originalPath: string
-} {
-  let isAIGenerated = false
+function parseNodeType(nodeType: string): { fileName: string; originalPath: string } {
   let fileName = 'plugin'
   let originalPath = nodeType
 
-  // 检查是否以import/或ai/开头
-  if (nodeType.startsWith('import/') || nodeType.startsWith('ai/')) {
-    isAIGenerated = nodeType.startsWith('ai/')
-
+  // 检查是否以import/开头
+  if (nodeType.startsWith(IMPORT_PREFIX)) {
     // 分割路径，提取文件名
     const parts = nodeType.split('/')
     if (parts.length >= 3) {
-      // 至少: import/App/className
+      // 至少: import/filename/nodename
       fileName = parts[1]
-      // 重建原始路径 (不包括import/或ai/前缀和文件名)
+      // 重建原始路径 (不包括import/前缀和文件名)
       originalPath = parts.slice(2).join('/')
-
-      // 检查文件名是否与路径第一段重复
-      const pathFirstPart = parts[2] // 第一段路径（可能是类别）
-      if (fileName === pathFirstPart) {
-        // 如果重复了，直接使用原始路径，避免重复
-        originalPath = parts.slice(2).join('/')
-      }
     }
   }
 
-  return { isAIGenerated, fileName, originalPath }
+  return { fileName, originalPath }
 }
 
 /**

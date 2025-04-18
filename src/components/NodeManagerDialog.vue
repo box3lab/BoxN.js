@@ -775,8 +775,8 @@ export default defineComponent({
           nodeType = registerTypeMap.get(className) || className;
         }
 
-        // 调用createNodeFile并传递文件名作为第5个参数
-        const success = await createNodeFile(className, nodeType, importedCode.value, false, fileName);
+        // 调用createNodeFile
+        const success = await createNodeFile(className, nodeType, importedCode.value, fileName);
 
         if (success) {
           successCount++;
