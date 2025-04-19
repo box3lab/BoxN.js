@@ -34,6 +34,12 @@ html {
   z-index: 1000;
 }
 
+/** 矫正搜索框下拉菜单背景色 */
+.litegraph.litesearchbox select option {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .graph-canvas {
