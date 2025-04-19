@@ -63,8 +63,8 @@
   left: 100px;
   min-width: 180px;
   color: #c4d3ff;
-  padding: 0;
-  border-radius: 12px;
+  padding: 3px 0px 3px 0px;
+  border-radius: 10px;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
@@ -239,8 +239,11 @@
   cursor: default !important;
 }
 
-.litegraph .litemenu-entry.has_submenu {
-  border-right: 2px solid #6b8aff;
+.litegraph .litemenu-entry.has_submenu::after {
+  /* border-right: 2px solid #6b8aff; */
+  display: block;
+  content: '+';
+  float: right;
 }
 
 .litegraph .litemenu-title {
@@ -256,7 +259,7 @@
 .litegraph .litemenu-entry:hover:not(.disabled):not(.separator) {
   background-color: rgba(74, 107, 175, 0.2) !important;
   color: #ffffff;
-  transform: translateX(2px) scale(1.02);
+  /* transform: translateX(2px) scale(1.02); */
 }
 
 .litegraph .litemenu-entry .property_name {
@@ -1838,7 +1841,7 @@ document.querySelector('.lgraphcanvas').addEventListener('mouseleave', function(
 .litegraph.litecontextmenu .litemenu-entry:hover {
   background-color: rgba(74, 107, 175, 0.2) !important;
   color: #ffffff;
-  transform: translateX(2px) scale(1.02);
+  /* transform: translateX(2px) scale(1.02); */
 }
 
 /* Enhanced glassmorphism for dialogs */
@@ -1856,6 +1859,7 @@ document.querySelector('.lgraphcanvas').addEventListener('mouseleave', function(
   -webkit-backdrop-filter: blur(12px);
   animation: search-appear 0.3s cubic-bezier(0.19, 1, 0.22, 1);
   transform-origin: top;
+  transform: none !important;
 }
 
 @keyframes search-appear {
