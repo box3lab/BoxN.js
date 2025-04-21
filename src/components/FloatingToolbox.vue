@@ -1,19 +1,63 @@
 <template>
-  <div ref="toolbox" class="floating-toolbox" :class="{ 'is-running': isRunning }"
-    :style="{ top: position.y + 'px', left: position.x + 'px' }" @mousedown="startDrag" @touchstart="startDrag">
-    <div class="toolbox-handle">
-      <span class="drag-indicator">⋮⋮</span>
-    </div>
-    <div class="filename-container">
-      <div class="filename-label">文件名:</div>
-      <div class="filename-input-group">
-        <input type="text" v-model="filename" placeholder="请输入文件名" class="filename-input" title="设置导出文件名" />
+  <div ref="toolbox" class="toolbar-container" :class="{ 'is-running': isRunning }">
+    <div class="toolbar-content">
+      <div class="logo-container">
+        <div class="logo">
+          <svg class="logo-icon" width="30" height="30" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 0C17.909 0 0 17.909 0 40s17.909 40 40 40 40-17.909 40-40S62.091 0 40 0z"
+              fill="url(#gradient-bg)" />
+            <path d="M59 28c0-2.2-1.8-4-4-4H25c-2.2 0-4 1.8-4 4v24c0 2.2 1.8 4 4 4h30c2.2 0 4-1.8 4-4V28z"
+              fill="#1a1a2d" stroke="#4a6baf" stroke-width="2" />
+            <path d="M25 35h30M25 45h30M35 24v32M45 24v32" stroke="#4a6baf" stroke-width="2" stroke-linecap="round" />
+            <path d="M52 40a12 12 0 11-24 0 12 12 0 0124 0z" fill="rgba(74, 107, 175, 0.3)" stroke="#4a6baf"
+              stroke-width="2" />
+            <defs>
+              <linearGradient id="gradient-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4a6baf" />
+                <stop offset="100%" stop-color="#2a3b66" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">LiteGraph <span>Editor</span></div>
       </div>
-      <div class="filename-tips">设置下载时使用的文件名</div>
-    </div>
-    <div class="toolbox-content">
-      <div class="other-buttons">
-        <button class="toolbox-btn btn-node-manager" @click="$emit('open-manager')" title="节点管理器">
+
+      <!-- 文件管理标签页 -->
+      <div class="file-tabs-container" :class="{ 'tabs-disabled': isRunning }">
+        <div class="file-tabs-scroll">
+          <div class="file-tabs">
+            <div v-for="(file, index) in files" :key="index"
+              :class="['file-tab', { active: currentFileIndex === index }]" @click="!isRunning && switchFile(index)">
+              <span class="file-tab-name">{{ file.name }}</span>
+              <button class="file-tab-close" @click.stop="!isRunning && confirmDeleteFile(index)" title="关闭文件"
+                :disabled="isRunning" :class="{ 'btn-disabled': isRunning }">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <button class="new-file-btn" @click="!isRunning && createNewFile()" title="创建新文件" :disabled="isRunning"
+              :class="{ 'btn-disabled': isRunning }">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar-actions">
+        <div class="filename-container">
+          <input type="text" v-model="currentFile.name" placeholder="文件名称" class="filename-input" title="编辑当前文件名称"
+            @change="updateFileName" :disabled="isRunning" />
+        </div>
+
+        <button class="toolbar-btn btn-node-manager" @click="$emit('open-manager')" title="节点管理器" :disabled="isRunning"
+          :class="{ 'btn-disabled': isRunning }">
           <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
             height="24">
             <path
@@ -22,7 +66,8 @@
           </svg>
         </button>
 
-        <button class="toolbox-btn btn-import" @click="$emit('import')" title="从文件导入">
+        <button class="toolbar-btn btn-import" @click="importIntoNewFile" title="导入到新文件" :disabled="isRunning"
+          :class="{ 'btn-disabled': isRunning }">
           <svg class="icon" viewBox="0 0 1052 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
             height="24">
             <path
@@ -31,7 +76,8 @@
           </svg>
         </button>
 
-        <button class="toolbox-btn btn-export" @click="exportFile" title="导出到文件">
+        <button class="toolbar-btn btn-export" @click="exportFile" title="导出到文件" :disabled="isRunning"
+          :class="{ 'btn-disabled': isRunning }">
           <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
             height="24">
             <path
@@ -40,7 +86,8 @@
           </svg>
         </button>
 
-        <button class="toolbox-btn btn-save" @click="$emit('save')" title="保存 (Ctrl+S / ⌘+S)">
+        <button class="toolbar-btn btn-save" @click="saveCurrentFile" title="保存 (Ctrl+S / ⌘+S)" :disabled="isRunning"
+          :class="{ 'btn-disabled': isRunning }">
           <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24"
             height="24">
             <path
@@ -48,345 +95,1306 @@
               fill="#ffffff"></path>
           </svg>
         </button>
+
+        <button class="toolbar-btn btn-control" :class="{ 'btn-stop': isRunning, 'btn-run': !isRunning }"
+          @click="toggleRunning" :title="isRunning ? '停止' : '运行'">
+          <svg v-if="isRunning" class="icon icon-control" viewBox="0 0 1024 1024" version="1.1"
+            xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+            <path
+              d="M128 128m53.333333 0l661.333334 0q53.333333 0 53.333333 53.333333l0 661.333334q0 53.333333-53.333333 53.333333l-661.333334 0q-53.333333 0-53.333333-53.333333l0-661.333334q0-53.333333 53.333333-53.333333Z"
+              fill="#ffffff"></path>
+          </svg>
+          <svg v-else class="icon icon-control" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            width="24" height="24">
+            <path
+              d="M170.666667 128l2.133333 768c0 34.133333 36.266667 53.333333 64 34.133333l597.333333-384c25.6-17.066667 25.6-53.333333 0-70.4L234.666667 91.733333C206.933333 74.666667 170.666667 93.866667 170.666667 128z"
+              fill="#ffffff"></path>
+          </svg>
+        </button>
       </div>
-      <button class="toolbox-btn btn-control" :class="{ 'btn-stop': isRunning, 'btn-run': !isRunning }"
-        @click="toggleRunning" :title="isRunning ? '停止' : '运行'">
-        <svg v-if="isRunning" class="icon icon-control" viewBox="0 0 1024 1024" version="1.1"
-          xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-          <path
-            d="M128 128m53.333333 0l661.333334 0q53.333333 0 53.333333 53.333333l0 661.333334q0 53.333333-53.333333 53.333333l-661.333334 0q-53.333333 0-53.333333-53.333333l0-661.333334q0-53.333333 53.333333-53.333333Z"
-            fill="#ffffff"></path>
-        </svg>
-        <svg v-else class="icon icon-control" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-          width="24" height="24">
-          <path
-            d="M170.666667 128l2.133333 768c0 34.133333 36.266667 53.333333 64 34.133333l597.333333-384c25.6-17.066667 25.6-53.333333 0-70.4L234.666667 91.733333C206.933333 74.666667 170.666667 93.866667 170.666667 128z"
-            fill="#ffffff"></path>
-        </svg>
-      </button>
+    </div>
+  </div>
+
+  <!-- 确认删除对话框 -->
+  <div v-if="showDeleteConfirm" class="modal-wrapper">
+    <div class="modal-overlay" @click="cancelDelete"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>确认删除</h3>
+        <button class="close-btn" @click="cancelDelete">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>确定要删除文件 "{{ fileToDelete?.name }}" 吗？</p>
+        <p class="warning-text">此操作不可撤销，文件内容将会丢失。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel-btn" @click="cancelDelete">取消</button>
+        <button class="modal-btn confirm-btn" @click="deleteFile">删除</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 
-const props = defineProps({
-  initialX: {
-    type: Number,
-    default: 20,
+// 定义文件接口
+interface GraphFile {
+  id: string;
+  name: string;
+  content: string;
+  lastModified: number;
+}
+
+const emit = defineEmits(['run', 'stop', 'save', 'export', 'import', 'open-manager', 'switchFile']);
+
+// 文件管理
+const files = ref<GraphFile[]>([]);
+const currentFileIndex = ref(0);
+const showDeleteConfirm = ref(false);
+const fileToDeleteIndex = ref(-1);
+
+// 计算当前文件
+const currentFile = computed({
+  get: () => {
+    if (files.value.length === 0) return { id: '', name: '', content: '', lastModified: 0 };
+    return files.value[currentFileIndex.value];
   },
-  initialY: {
-    type: Number,
-    default: 20,
-  },
-})
+  set: (value) => {
+    if (files.value.length === 0) return;
+    files.value[currentFileIndex.value] = value;
+  }
+});
 
-const emit = defineEmits(['run', 'stop', 'save', 'export', 'import', 'open-manager'])
+// 用于删除确认的文件引用
+const fileToDelete = computed(() => {
+  if (fileToDeleteIndex.value < 0 || fileToDeleteIndex.value >= files.value.length) {
+    return null;
+  }
+  return files.value[fileToDeleteIndex.value];
+});
 
-// 文件名
-const filename = ref('litegraph')
-
-// 从本地存储加载文件名
-const loadSavedFilename = () => {
+// 初始化文件
+const initializeFiles = () => {
   try {
-    const savedFilename = localStorage.getItem('boxn_filename')
-    if (savedFilename) {
-      filename.value = savedFilename
+    // 尝试从localStorage加载已有文件
+    const savedFiles = localStorage.getItem('boxn_files');
+    if (savedFiles) {
+      files.value = JSON.parse(savedFiles);
+      // 确保至少有一个文件
+      if (files.value.length === 0) {
+        createDefaultFile();
+      }
+    } else {
+      createDefaultFile();
     }
   } catch (e) {
-    console.warn('无法从本地存储加载文件名', e)
+    console.warn('无法从本地存储加载文件列表', e);
+    createDefaultFile();
   }
-}
+};
 
-// 保存文件名到本地存储
-const saveFilenameToStorage = () => {
+// 创建默认文件
+const createDefaultFile = () => {
+  files.value = [{
+    id: generateId(),
+    name: 'untitled',
+    content: '',
+    lastModified: Date.now()
+  }];
+  currentFileIndex.value = 0;
+  saveFilesToStorage();
+};
+
+// 生成唯一ID
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+};
+
+// 保存文件列表到本地存储
+const saveFilesToStorage = () => {
   try {
-    localStorage.setItem('boxn_filename', filename.value)
+    localStorage.setItem('boxn_files', JSON.stringify(files.value));
+    console.log(`已保存 ${files.value.length} 个文件到本地存储`);
   } catch (e) {
-    console.warn('无法保存文件名到本地存储', e)
+    console.error('无法保存文件列表到本地存储', e);
   }
-}
+};
 
-// 监听文件名变化，保存到本地存储
-watch(filename, saveFilenameToStorage)
+// 创建新文件
+const createNewFile = () => {
+  const newFile: GraphFile = {
+    id: generateId(),
+    name: `untitled_${files.value.length + 1}`,
+    content: '',
+    lastModified: Date.now()
+  };
 
-// 组件挂载时加载文件名
-onMounted(loadSavedFilename)
+  files.value.push(newFile);
+  currentFileIndex.value = files.value.length - 1;
+  saveFilesToStorage();
 
-// 工具箱状态
-const isRunning = ref(false)
+  // 通知父组件切换到新文件
+  emit('switchFile', newFile);
+};
 
-// 工具箱位置
-const position = reactive({
-  x: props.initialX,
-  y: props.initialY,
-})
+// 切换文件
+const switchFile = (index: number) => {
+  if (isRunning.value) return;
+  currentFileIndex.value = index;
+  emit('switchFile', files.value[index]);
+};
 
-// 拖动状态
-const isDragging = ref(false)
-const dragOffset = reactive({ x: 0, y: 0 })
-const toolbox = ref<HTMLElement | null>(null)
+// 更新文件名
+const updateFileName = () => {
+  // 如果图形正在运行，则不允许更新文件名
+  if (isRunning.value) return;
 
-// 切换运行状态
-const toggleRunning = () => {
-  isRunning.value = !isRunning.value
-  if (isRunning.value) {
-    emit('run')
+  if (currentFile.value.name.trim() === '') {
+    currentFile.value.name = `untitled_${currentFileIndex.value + 1}`;
+  }
+
+  currentFile.value.lastModified = Date.now();
+  saveFilesToStorage();
+};
+
+// 保存当前文件
+const saveCurrentFile = () => {
+  // 如果图形正在运行，则不允许保存
+  if (isRunning.value) return;
+
+  const file = currentFile.value;
+  file.lastModified = Date.now();
+  saveFilesToStorage();
+
+  // 调用原有的保存功能
+  emit('save', file.id);
+};
+
+// 确认删除文件
+const confirmDeleteFile = (index: number) => {
+  // 如果图形正在运行或只有一个文件，则不允许删除
+  if (isRunning.value || files.value.length <= 1) {
+    return;
+  }
+
+  fileToDeleteIndex.value = index;
+  showDeleteConfirm.value = true;
+};
+
+// 取消删除
+const cancelDelete = () => {
+  showDeleteConfirm.value = false;
+  fileToDeleteIndex.value = -1;
+};
+
+// 删除文件
+const deleteFile = () => {
+  if (fileToDeleteIndex.value < 0 || files.value.length <= 1) {
+    cancelDelete();
+    return;
+  }
+
+  const isCurrentFile = fileToDeleteIndex.value === currentFileIndex.value;
+
+  // 删除文件
+  files.value.splice(fileToDeleteIndex.value, 1);
+
+  // 调整当前索引
+  if (isCurrentFile) {
+    // 如果删除的是当前文件，切换到前一个文件或第一个文件
+    currentFileIndex.value = Math.min(fileToDeleteIndex.value, files.value.length - 1);
+
+    // 通知父组件切换文件
+    const file = files.value[currentFileIndex.value];
+    emit('switchFile', file);
+  } else if (fileToDeleteIndex.value < currentFileIndex.value) {
+    // 如果删除的文件在当前文件之前，需要调整索引
+    currentFileIndex.value--;
+  }
+
+  saveFilesToStorage();
+  cancelDelete();
+};
+
+// 更新文件内容
+const updateFileContent = (fileId: string, content: string) => {
+  const fileIndex = files.value.findIndex(f => f.id === fileId);
+  if (fileIndex >= 0) {
+    // 更新文件内容
+    files.value[fileIndex].content = content;
+    files.value[fileIndex].lastModified = Date.now();
+
+    // 确保保存到localStorage
+    saveFilesToStorage();
+
+    console.log(`已更新文件内容: ${fileId}`);
   } else {
-    emit('stop')
+    console.warn(`找不到要更新的文件: ${fileId}`);
   }
-}
+};
 
 // 导出文件
 const exportFile = () => {
-  saveFilenameToStorage()
-  emit('export', filename.value)
-}
+  // 如果图形正在运行，则不允许导出
+  if (isRunning.value) return;
 
-// 开始拖动
-const startDrag = (event: MouseEvent | TouchEvent) => {
-  if (!toolbox.value) return
+  emit('export', currentFile.value.name);
+};
 
-  // 如果点击的是按钮或输入框，不启动拖动
-  if (event.target instanceof HTMLElement) {
-    const target = event.target as HTMLElement
-    if (
-      target.tagName === 'BUTTON' ||
-      target.closest('button') ||
-      target.tagName === 'INPUT' ||
-      target.closest('input')
-    ) {
-      return
-    }
-  }
+// 导入文件到新文件
+const importIntoNewFile = () => {
+  // 如果图形正在运行，则不允许导入
+  if (isRunning.value) return;
 
-  isDragging.value = true
+  // 先创建一个新文件
+  const newFile: GraphFile = {
+    id: generateId(),
+    name: `imported_${files.value.length + 1}`,
+    content: '',
+    lastModified: Date.now()
+  };
 
-  // 计算点击/触摸位置与工具箱左上角的偏移
-  if (event instanceof MouseEvent) {
-    dragOffset.x = event.clientX - position.x
-    dragOffset.y = event.clientY - position.y
+  files.value.push(newFile);
+  currentFileIndex.value = files.value.length - 1;
+  saveFilesToStorage();
 
-    document.addEventListener('mousemove', onDrag)
-    document.addEventListener('mouseup', stopDrag)
+  // 通知父组件切换到新文件并触发导入
+  emit('switchFile', newFile);
+  emit('import');
+};
+
+// 工具箱状态
+const isRunning = ref(false);
+const toolbox = ref<HTMLElement | null>(null);
+
+// 切换运行状态
+const toggleRunning = () => {
+  isRunning.value = !isRunning.value;
+  if (isRunning.value) {
+    emit('run');
   } else {
-    // TouchEvent
-    const touch = event.touches[0]
-    dragOffset.x = touch.clientX - position.x
-    dragOffset.y = touch.clientY - position.y
-
-    document.addEventListener('touchmove', onDrag)
-    document.addEventListener('touchend', stopDrag)
+    emit('stop');
   }
-}
+};
 
-// 拖动中
-const onDrag = (event: MouseEvent | TouchEvent) => {
-  if (!isDragging.value) return
-
-  let clientX, clientY
-
-  if (event instanceof MouseEvent) {
-    clientX = event.clientX
-    clientY = event.clientY
-  } else {
-    // TouchEvent
-    const touch = event.touches[0]
-    clientX = touch.clientX
-    clientY = touch.clientY
-  }
-
-  // 计算新位置
-  position.x = clientX - dragOffset.x
-  position.y = clientY - dragOffset.y
-
-  // 防止拖出视口
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  const boxWidth = toolbox.value?.offsetWidth || 0
-  const boxHeight = toolbox.value?.offsetHeight || 0
-
-  position.x = Math.max(0, Math.min(position.x, viewportWidth - boxWidth))
-  position.y = Math.max(0, Math.min(position.y, viewportHeight - boxHeight))
-}
-
-// 停止拖动
-const stopDrag = () => {
-  isDragging.value = false
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', stopDrag)
-  document.removeEventListener('touchmove', onDrag)
-  document.removeEventListener('touchend', stopDrag)
-
-  // 保存位置到本地存储
-  try {
-    localStorage.setItem('boxn_toolbox_position', JSON.stringify(position))
-  } catch (e) {
-    console.warn('无法保存工具箱位置', e)
-  }
-}
-
-// 挂载时尝试从本地存储恢复位置
+// 组件挂载时初始化
 onMounted(() => {
-  try {
-    const savedPosition = localStorage.getItem('boxn_toolbox_position')
-    if (savedPosition) {
-      const pos = JSON.parse(savedPosition)
-      position.x = pos.x
-      position.y = pos.y
+  initializeFiles();
+
+  // 添加全局键盘快捷键监听
+  window.addEventListener('keydown', handleKeyboardShortcut);
+});
+
+// 组件卸载时清理事件监听器
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeyboardShortcut);
+});
+
+// 处理键盘快捷键
+const handleKeyboardShortcut = (event: KeyboardEvent) => {
+  // Ctrl+S 或 Cmd+S (保存)
+  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+    event.preventDefault(); // 阻止浏览器默认保存行为
+
+    // 只有在图形未运行时才能保存
+    if (!isRunning.value) {
+      saveCurrentFile();
     }
-  } catch (e) {
-    console.warn('无法加载工具箱位置', e)
   }
-})
+};
+
+// 监听文件变化
+watch(files, saveFilesToStorage, { deep: true });
+
+// 暴露给父组件的方法
+defineExpose({
+  updateFileContent,
+  currentFileId: computed(() => currentFile.value.id)
+});
 </script>
 
 <style scoped>
-.floating-toolbox {
+.toolbar-container {
   position: fixed;
-  background-color: #333;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(90deg, rgba(26, 26, 45, 0.98) 0%, rgba(37, 37, 64, 0.98) 100%);
   color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  padding: 10px;
-  width: 220px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 2px 0 rgba(74, 107, 175, 0.3);
+  padding: 0 20px;
   z-index: 1000;
   user-select: none;
   display: flex;
-  flex-direction: column;
-}
-
-.toolbox-handle {
-  width: 100%;
-  cursor: move;
-  text-align: center;
-  padding-bottom: 5px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid #444;
-}
-
-.drag-indicator {
-  color: #888;
-  font-size: 14px;
-  letter-spacing: 1px;
-}
-
-.filename-container {
-  margin-bottom: 10px;
-}
-
-.filename-label {
-  font-size: 12px;
-  margin-bottom: 3px;
-  color: #aaa;
-}
-
-.filename-input-group {
-  display: flex;
   align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.filename-input {
-  flex: 1;
-  background-color: #222;
-  border: 1px solid #444;
-  color: white;
-  padding: 6px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  outline: none;
+.toolbar-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(180deg, rgba(74, 107, 175, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  opacity: 0.5;
 }
 
-.filename-input:focus {
-  border-color: #666;
+.toolbar-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+      rgba(58, 93, 217, 0.1) 0%,
+      rgba(74, 110, 224, 0.6) 50%,
+      rgba(58, 93, 217, 0.1) 100%);
+  filter: drop-shadow(0 1px 2px rgba(74, 107, 175, 0.5));
 }
 
-.filename-tips {
-  font-size: 10px;
-  color: #888;
-  margin-top: 3px;
-}
-
-.toolbox-content {
+.toolbar-content {
+  width: 100%;
+  max-width: 1400px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
-.toolbox-btn {
-  background-color: #444;
-  border: none;
+.toolbar-content::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg,
+      rgba(74, 107, 175, 0) 0%,
+      rgba(74, 107, 175, 0.05) 50%,
+      rgba(74, 107, 175, 0) 100%);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Logo 样式 */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 160px;
+  padding-right: 10px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.logo-container:hover {
+  transform: translateY(-1px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.logo::before {
+  content: '';
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74, 107, 175, 0.2) 0%, rgba(30, 30, 50, 0) 70%);
+  animation: pulse 3s infinite ease-in-out;
+}
+
+.logo::after {
+  content: '';
+  position: absolute;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74, 107, 175, 0.05) 0%, rgba(30, 30, 50, 0) 70%);
+  animation: pulse 4s infinite ease-in-out 1s;
+}
+
+.logo-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: all 0.3s ease;
+  z-index: 2;
+  position: relative;
+}
+
+.logo-icon:hover {
+  filter: drop-shadow(0 2px 8px rgba(74, 107, 175, 0.5));
+  transform: rotate(-5deg) scale(1.05);
+}
+
+.logo-text {
+  font-weight: 600;
+  font-size: 16px;
+  background: linear-gradient(90deg, #ffffff 0%, #d0d0f0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.logo-text:hover {
+  background: linear-gradient(90deg, #ffffff 0%, #a0c0ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  letter-spacing: 0.6px;
+  transform: translateY(-1px);
+}
+
+.logo-text span {
+  font-weight: 400;
+  opacity: 0.8;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.logo-text:hover span {
+  opacity: 1;
+}
+
+.logo-text::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg,
+      rgba(74, 110, 224, 0.6) 0%,
+      rgba(74, 110, 224, 0.1) 100%);
+  transition: all 0.3s ease;
+}
+
+.logo-text:hover::after {
+  width: 80%;
+  left: 10%;
+  background: linear-gradient(90deg,
+      rgba(74, 110, 224, 0.1) 0%,
+      rgba(74, 110, 224, 0.8) 50%,
+      rgba(74, 110, 224, 0.1) 100%);
+}
+
+/* 文件标签页样式 */
+.file-tabs-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  max-width: 60%;
+  position: relative;
+  padding-bottom: 1px;
+}
+
+.file-tabs-container::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 0;
+}
+
+.tabs-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.tabs-disabled .file-tab,
+.tabs-disabled .file-tab-close,
+.tabs-disabled .new-file-btn {
+  cursor: not-allowed !important;
+}
+
+.file-tabs-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 107, 175, 0.4) rgba(0, 0, 0, 0.2);
+  width: 100%;
+  position: relative;
+  padding-bottom: 2px;
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+.file-tabs-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.file-tabs-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
+}
+
+.file-tabs-scroll::-webkit-scrollbar-thumb {
+  background: rgba(74, 107, 175, 0.4);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.file-tabs-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 107, 175, 0.6);
+}
+
+.file-tabs {
+  display: flex;
+  height: 35px;
+  align-items: center;
+  min-width: min-content;
+  position: relative;
+  padding-bottom: 1px;
+  margin-top: 3px;
+}
+
+.file-tab {
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 14px;
+  height: 32px;
+  min-width: 120px;
+  max-width: 180px;
+  background: rgba(40, 40, 65, 0.5);
+  border-radius: 6px 6px 0 0;
+  margin-right: 2px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: none;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.file-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 50%);
+  border-radius: 6px 6px 0 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.file-tab:hover::before {
+  opacity: 1;
+}
+
+.file-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg,
+      rgba(74, 107, 175, 0.2) 0%,
+      rgba(74, 107, 175, 0.5) 50%,
+      rgba(74, 107, 175, 0.2) 100%);
+  opacity: 0;
+  transform: scaleX(0.7);
+  transition: all 0.3s ease;
+}
+
+.file-tab:hover::after {
+  opacity: 0.7;
+  transform: scaleX(1);
+}
+
+.file-tab.active {
+  background: linear-gradient(180deg, rgba(74, 107, 175, 0.3) 0%, rgba(60, 90, 150, 0.2) 100%);
+  height: 35px;
+  z-index: 2;
+  border-top: 2px solid #4a6baf;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.file-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.file-tab.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+  height: 2px;
+  background: linear-gradient(90deg,
+      rgba(74, 107, 175, 0.3) 0%,
+      rgba(100, 150, 255, 0.8) 50%,
+      rgba(74, 107, 175, 0.3) 100%);
+}
+
+.file-tab:hover:not(.active) {
+  background: rgba(50, 50, 80, 0.7);
+  transform: translateY(-1px);
+}
+
+.file-tab-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: #ccc;
+  padding-right: 5px;
+  transition: color 0.2s ease, transform 0.2s ease;
+  position: relative;
+}
+
+.file-tab:hover .file-tab-name {
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.active .file-tab-name {
+  color: white;
+  font-weight: 500;
+}
+
+.file-tab-close {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.file-tab-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  opacity: 1;
+  transform: scale(1.1) rotate(90deg);
+}
+
+.file-tab.active .file-tab-close {
+  opacity: 0.7;
+}
+
+.new-file-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  color: white;
+  border: 1px solid rgba(74, 107, 175, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-left: 5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.new-file-btn:hover {
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.new-file-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.new-file-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.new-file-btn:hover svg {
+  transform: rotate(90deg);
+}
+
+/* 工具栏操作区 */
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.filename-container {
+  position: relative;
+  width: 180px;
+}
+
+.filename-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -20px;
+  width: 1px;
+  height: 24px;
+  background: linear-gradient(to bottom, rgba(74, 107, 175, 0.1), rgba(74, 107, 175, 0.3), rgba(74, 107, 175, 0.1));
+  transform: translateY(-50%);
+  opacity: 0.5;
+}
+
+.filename-input {
+  width: 100%;
+  background-color: rgba(30, 30, 50, 0.6);
+  border: 1px solid rgba(74, 107, 175, 0.3);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.filename-input:focus {
+  border-color: #4a6baf;
+  box-shadow: 0 0 0 2px rgba(74, 107, 175, 0.25), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: rgba(40, 40, 65, 0.7);
+  transform: translateY(-1px);
+}
+
+.filename-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: rgba(20, 20, 30, 0.6);
+}
+
+.toolbar-btn {
+  background: linear-gradient(135deg, #303050 0%, #252540 100%);
+  border: none;
+  border-radius: 10px;
   color: white;
   padding: 8px;
-  margin: 3px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 42px;
+  height: 42px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
-.toolbox-btn:hover {
-  background-color: #555;
+.toolbar-btn::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.toolbar-btn:hover::before {
+  opacity: 1;
+}
+
+.toolbar-btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn-disabled {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.02) inset !important;
+  cursor: not-allowed;
+}
+
+.btn-disabled::after {
+  opacity: 0.3;
+}
+
+.btn-disabled:hover {
+  transform: none !important;
+  background: linear-gradient(135deg, #303050 0%, #252540 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.02) inset !important;
+}
+
+.toolbar-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  border-radius: 10px 10px 0 0;
+}
+
+.toolbar-btn:hover {
+  background: linear-gradient(135deg, #3a3a60 0%, #2d2d4d 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.toolbar-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.icon {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.toolbar-btn:hover .icon {
+  transform: scale(1.1);
 }
 
 .btn-control {
-  height: 40px;
-  width: 40px;
-  background-color: #2a6cbf;
+  height: 42px;
+  width: 42px;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  position: relative;
+  border: 1px solid rgba(74, 107, 175, 0.15);
+}
+
+.btn-control::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: rgba(74, 107, 175, 0.8);
+  border-radius: 1px;
 }
 
 .btn-control:hover {
-  background-color: #2978d8;
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
 }
 
 .btn-run {
-  background-color: #2a6cbf;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+}
+
+.btn-run .icon {
+  transform: translateX(1px);
+}
+
+.btn-run:hover .icon {
+  transform: translateX(2px) scale(1.1);
 }
 
 .btn-stop {
-  background-color: #bf2a2a;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  border: 1px solid rgba(211, 47, 47, 0.15);
+}
+
+.btn-stop::after {
+  background: rgba(211, 47, 47, 0.7);
 }
 
 .btn-stop:hover {
-  background-color: #d82a2a;
-}
-
-.other-buttons {
-  display: flex;
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
 }
 
 .btn-save {
-  background-color: #2a8c4a;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  border: 1px solid rgba(48, 160, 85, 0.15);
+}
+
+.btn-save::after {
+  background: rgba(48, 160, 85, 0.7);
 }
 
 .btn-save:hover {
-  background-color: #2a9e53;
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
+}
+
+.btn-save:hover .icon {
+  transform: translateY(-2px) scale(1.1);
+}
+
+.btn-export {
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  border: 1px solid rgba(138, 84, 227, 0.15);
+}
+
+.btn-export::after {
+  background: rgba(138, 84, 227, 0.7);
+}
+
+.btn-export:hover {
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
+}
+
+.btn-export:hover .icon {
+  transform: translateY(-2px) scale(1.1);
+}
+
+.btn-import {
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  border: 1px solid rgba(227, 138, 84, 0.15);
+}
+
+.btn-import::after {
+  background: rgba(227, 138, 84, 0.7);
+}
+
+.btn-import:hover {
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
+}
+
+.btn-import:hover .icon {
+  transform: translateY(2px) scale(1.1);
 }
 
 .is-running .btn-control {
-  background-color: #bf2a2a;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  border: 1px solid rgba(211, 47, 47, 0.25);
+}
+
+.is-running .btn-control::after {
+  background: rgba(211, 47, 47, 0.8);
 }
 
 .is-running .btn-control:hover {
-  background-color: #d82a2a;
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
 }
 
 /* 添加节点管理器按钮样式 */
 .btn-node-manager {
-  background-color: #8e44ad;
-  border-radius: 5px;
+  background: linear-gradient(135deg, #2e3044 0%, #252535 100%);
+  border: 1px solid rgba(138, 84, 227, 0.15);
+}
+
+.btn-node-manager::after {
+  background: rgba(138, 84, 227, 0.7);
 }
 
 .btn-node-manager:hover {
-  background-color: #9b59b6;
+  background: linear-gradient(135deg, #363852 0%, #2d2d43 100%);
 }
 
-@media (max-width: 480px) {
-  .floating-toolbox {
-    width: 180px;
+.btn-node-manager:hover .icon {
+  transform: rotate(45deg) scale(1.1);
+}
+
+/* 确认删除对话框 */
+.modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.3s ease;
+  pointer-events: auto;
+}
+
+.modal-container {
+  position: relative;
+  background: linear-gradient(145deg, #1e1e2d 0%, #1a1a25 100%);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 0 3px rgba(74, 107, 175, 0.2),
+    0 0 30px rgba(74, 107, 175, 0.1);
+  width: 400px;
+  max-width: 90%;
+  overflow: hidden;
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+.modal-header {
+  background: linear-gradient(90deg, #303048 0%, #252538 100%);
+  padding: 15px 20px;
+  border-bottom: 1px solid #3a3a58;
+  position: relative;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+}
+
+.modal-header h3::before {
+  content: "⚠️";
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.modal-body {
+  padding: 20px;
+  color: #bbbbcc;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.modal-body p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.warning-text {
+  color: #e57373;
+  font-size: 13px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.warning-text::before {
+  content: "⚠️";
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.modal-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 500;
+  border: none;
+  min-width: 80px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.modal-btn:active {
+  transform: translateY(0);
+}
+
+.cancel-btn {
+  background: linear-gradient(145deg, #2e3044, #252535);
+  color: #bbbbcc;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(145deg, #363852, #2d2d43);
+}
+
+.confirm-btn {
+  background: linear-gradient(145deg, #2e3044, #252535);
+  color: white;
+  border: 1px solid rgba(211, 47, 47, 0.2);
+}
+
+.confirm-btn::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 2px;
+  background: rgba(211, 47, 47, 0.7);
+  border-radius: 1px;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(145deg, #363852, #2d2d43);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* 响应式布局 */
+@media (max-width: 950px) {
+  .logo-text {
+    display: none;
+  }
+
+  .logo-container {
+    min-width: auto;
+    padding-right: 5px;
+  }
+
+  .file-tabs-container {
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .toolbar-container {
+    height: auto;
+    padding: 12px 15px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .toolbar-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .logo-container {
+    margin-bottom: 10px;
+    align-self: center;
+  }
+
+  .logo-text {
+    display: inline;
+  }
+
+  .file-tabs-container {
+    max-width: 100%;
+    width: 100%;
+    order: 1;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 5px;
+    order: 2;
+  }
+
+  .filename-container {
+    flex: 1;
+    margin-right: 10px;
+    width: auto;
+  }
+
+  .toolbar-btn {
+    width: 38px;
+    height: 38px;
   }
 }
 </style>

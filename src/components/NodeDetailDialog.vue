@@ -502,7 +502,7 @@ export default defineComponent({
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  z-index: 900;
+  z-index: 1000;
   transform: translateX(0);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);

@@ -1146,7 +1146,7 @@ export default defineComponent({
   right: 0;
   bottom: 0;
   display: flex;
-  z-index: 900;
+  z-index: 1000;
   transition: all 0.3s ease;
   max-width: 90vw;
 }
