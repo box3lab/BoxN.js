@@ -1,0 +1,2379 @@
+/* this CSS contains only the basic CSS needed to run the app and use it */
+
+/* Enhanced with 3D effects, glassmorphism, advanced animations, and better visual feedback */
+
+.lgraphcanvas {
+  /*cursor: crosshair;*/
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+  font-family: 'Inter', 'Roboto', Tahoma, sans-serif;
+  background-color: #1e1e2f;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(40, 45, 75, 0.3) 0%, rgba(25, 25, 40, 0.1) 100%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(80, 120, 255, 0.03) 0px,
+      rgba(80, 120, 255, 0.03) 2px,
+      transparent 2px,
+      transparent 50px
+    );
+  transition: background-color 0.3s ease;
+  position: relative;
+}
+
+.lgraphcanvas::before {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 30%;
+  top: 15%;
+  left: 25%;
+  background: radial-gradient(circle, rgba(107, 138, 255, 0.1) 0%, transparent 70%);
+  filter: blur(50px);
+  opacity: 0.8;
+  pointer-events: none;
+  animation: canvas-glow 15s ease-in-out infinite alternate;
+}
+
+@keyframes canvas-glow {
+  0% {
+    opacity: 0.3;
+    transform: translate(-5%, -5%) scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(5%, 2%) scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translate(5%, 5%) scale(0.9);
+  }
+}
+
+.lgraphcanvas * {
+  box-sizing: border-box;
+}
+
+.litegraph.litecontextmenu {
+  font-family: 'Inter', 'Roboto', Tahoma, sans-serif;
+  position: fixed;
+  top: 100px;
+  left: 100px;
+  min-width: 180px;
+  color: #c4d3ff;
+  padding: 3px 0px 3px 0px;
+  border-radius: 10px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  background: linear-gradient(to bottom, rgba(50, 50, 76, 0.9), rgba(37, 37, 64, 0.9)) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  animation: fadeInMenu 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+  transform-origin: top;
+}
+
+@keyframes fadeInMenu {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.litegraph.litecontextmenu.dark {
+  background: linear-gradient(to bottom, #202030, #151525) !important;
+}
+
+.litegraph.litecontextmenu .litemenu-title img {
+  margin: 4px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.litegraph.litecontextmenu .litemenu-entry {
+  margin: 2px 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.litegraph.litecontextmenu .litemenu-entry::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(107, 138, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.litegraph.litecontextmenu .litemenu-entry:hover::before {
+  opacity: 1;
+}
+
+.litegraph.litecontextmenu .litemenu-entry.submenu {
+  background-color: rgba(74, 107, 175, 0.2) !important;
+}
+
+.litegraph.litecontextmenu.dark .litemenu-entry.submenu {
+  background-color: rgba(80, 90, 140, 0.3) !important;
+}
+
+.litegraph .litemenubar ul {
+  font-family: 'Inter', 'Roboto', Tahoma, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  background: linear-gradient(to right, #282840, #32324c);
+}
+
+.litegraph .litemenubar li {
+  font-size: 14px;
+  color: #c4d3ff;
+  display: inline-block;
+  min-width: 60px;
+  padding: 8px 15px;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: center;
+}
+
+.litegraph .litemenubar li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.litegraph .litemenubar li::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(to right, #4a6bff, #6b8aff);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateX(-50%);
+}
+
+.litegraph .litemenubar li:hover::after {
+  width: 70%;
+}
+
+.litegraph .litegraph .litemenubar-panel {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  min-width: 200px;
+  background: linear-gradient(135deg, #2d2d44, #252536);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 3px solid #6b8aff;
+  z-index: 100;
+}
+
+.litegraph .litemenu-entry,
+.litemenu-title {
+  font-size: 13px;
+  color: #e0e0ff;
+  padding: 6px 12px;
+  margin: 2px;
+  border-radius: 4px;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.litegraph .litemenu-entry .icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin: 0 8px 0 0;
+  vertical-align: text-bottom;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.litegraph .litemenu-entry.checked .icon {
+  background-color: #6b8aff;
+  border-radius: 2px;
+  opacity: 1;
+}
+
+.litegraph .litemenu-entry .more {
+  float: right;
+  padding-right: 5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.litegraph .litemenu-entry.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.litegraph .litemenu-entry.separator {
+  display: block;
+  height: 1px;
+  margin: 6px 2px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+  padding: 0 !important;
+  cursor: default !important;
+}
+
+.litegraph .litemenu-entry.has_submenu::after {
+  /* border-right: 2px solid #6b8aff; */
+  display: block;
+  content: '+';
+  float: right;
+}
+
+.litegraph .litemenu-title {
+  color: #e0e0ff;
+  background: linear-gradient(to right, #252536, #2d2d44);
+  margin: 0;
+  padding: 8px 12px;
+  cursor: default;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.litegraph .litemenu-entry:hover:not(.disabled):not(.separator) {
+  background-color: rgba(74, 107, 175, 0.2) !important;
+  color: #ffffff;
+  /* transform: translateX(2px) scale(1.02); */
+}
+
+.litegraph .litemenu-entry .property_name {
+  display: inline-block;
+  text-align: left;
+  min-width: 100px;
+  min-height: 1.2em;
+}
+
+.litegraph .litemenu-entry .property_value {
+  display: inline-block;
+  background-color: rgba(0, 0, 0, 0.2);
+  text-align: right;
+  min-width: 80px;
+  min-height: 1.2em;
+  vertical-align: middle;
+  padding: 2px 10px;
+  border-radius: 3px;
+  margin-left: 5px;
+  transition: all 0.2s ease;
+}
+
+.litegraph .litemenu-entry:hover .property_value {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.litegraph.litesearchbox {
+  font-family: 'Inter', 'Roboto', Tahoma, sans-serif;
+  position: absolute;
+  background: linear-gradient(135deg, rgba(30, 30, 46, 0.8), rgba(40, 40, 56, 0.8));
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: search-appear 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  transform-origin: top;
+}
+
+@keyframes search-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.litegraph.litesearchbox input,
+.litegraph.litesearchbox select {
+  margin-top: 6px;
+  min-width: 200px;
+  min-height: 2em;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: white;
+  padding: 5px 12px;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+}
+
+.litegraph.litesearchbox input:focus,
+.litegraph.litesearchbox select:focus {
+  border-color: #6b8aff;
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.25);
+  outline: none;
+}
+
+.litegraph.litesearchbox .name {
+  display: inline-block;
+  min-width: 80px;
+  min-height: 1.5em;
+  padding-left: 10px;
+  color: #e0e0ff;
+  font-weight: 500;
+}
+
+.litegraph.litesearchbox .helper {
+  overflow: auto;
+  max-height: 300px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.litegraph.lite-search-item {
+  font-family: 'Inter', 'Roboto', Tahoma, sans-serif;
+  background-color: transparent;
+  color: #e0e0ff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 2px;
+  transition: all 0.2s ease;
+}
+
+.litegraph.lite-search-item.not_in_filter {
+  color: #b99;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.litegraph.lite-search-item.generic_type {
+  color: #999;
+  font-style: italic;
+}
+
+.litegraph.lite-search-item:hover,
+.litegraph.lite-search-item.selected {
+  cursor: pointer;
+  background-color: rgba(107, 138, 255, 0.2);
+  color: white;
+}
+
+/* DIALOGs ******/
+
+.litegraph .dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -150px;
+  margin-left: -200px;
+  background: linear-gradient(135deg, rgba(45, 45, 68, 0.95), rgba(37, 37, 54, 0.95));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  min-width: 450px;
+  min-height: 200px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 20px rgba(107, 138, 255, 0.1) inset;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: dialog-appear 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes dialog-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.litegraph .dialog.settings {
+  left: 10px;
+  top: 10px;
+  height: calc(100% - 20px);
+  margin: auto;
+  max-width: 50%;
+  animation: none;
+}
+
+.litegraph .dialog.centered {
+  top: 50px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  min-width: 600px;
+  min-height: 300px;
+  height: calc(100% - 100px);
+  margin: auto;
+}
+
+.litegraph .dialog .close {
+  float: right;
+  margin: 12px;
+  margin-right: 15px;
+  cursor: pointer;
+  font-size: 1.5em;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.litegraph .dialog .close:hover {
+  color: white;
+  transform: scale(1.2);
+}
+
+.litegraph .dialog .dialog-header {
+  color: #e0e0ff;
+  background: linear-gradient(to right, #252536, #2d2d44);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 10px;
+}
+
+.litegraph .dialog .dialog-header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.litegraph .dialog .dialog-footer {
+  height: 60px;
+  padding: 10px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.litegraph .dialog .dialog-header .dialog-title {
+  font:
+    18px 'Inter',
+    'Roboto',
+    sans-serif;
+  margin: 0;
+  padding: 10px;
+  display: inline-block;
+  font-weight: 600;
+}
+
+.litegraph .dialog .dialog-content,
+.litegraph .dialog .dialog-alt-content {
+  height: calc(100% - 110px);
+  width: 100%;
+  min-height: 100px;
+  display: inline-block;
+  color: #e0e0ff;
+  overflow: auto;
+  padding: 10px 15px;
+}
+
+.litegraph .dialog .dialog-content h3 {
+  margin: 15px 0 10px 0;
+  color: #b8c7ff;
+  font-weight: 600;
+  font-size: 16px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.litegraph .dialog .dialog-content .connections {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.litegraph .dialog .dialog-content .connections .connections_side {
+  width: calc(50% - 5px);
+  min-height: 120px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+}
+
+.litegraph .dialog .node_type {
+  font-size: 1.3em;
+  display: block;
+  margin: 15px 0 5px 0;
+  color: #e0e0ff;
+  font-weight: 600;
+}
+
+.litegraph .dialog .node_desc {
+  opacity: 0.7;
+  display: block;
+  margin: 0 0 15px 0;
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+.litegraph .dialog .separator {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+  margin: 15px 0;
+  padding: 0;
+}
+
+.litegraph .dialog .property {
+  margin-bottom: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.litegraph .dialog .property:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.litegraph .dialog .property_name {
+  color: #b8c7ff;
+  display: inline-block;
+  text-align: left;
+  vertical-align: top;
+  width: 160px;
+  padding-left: 8px;
+  overflow: hidden;
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.litegraph .dialog .property:hover .property_name {
+  color: white;
+}
+
+.litegraph .dialog .property_value {
+  display: inline-block;
+  text-align: right;
+  color: #e0e0ff;
+  background-color: rgba(0, 0, 0, 0.2);
+  max-width: calc(100% - 180px);
+  min-width: 200px;
+  min-height: 28px;
+  padding: 6px 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.litegraph .dialog .property_value:hover {
+  color: white;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-color: rgba(107, 138, 255, 0.5);
+}
+
+.litegraph .dialog .property.boolean .property_value {
+  padding-right: 30px;
+  color: #f88;
+  position: relative;
+}
+
+.litegraph .dialog .property.boolean .property_value::after {
+  content: '✕';
+  position: absolute;
+  right: 10px;
+  color: #f88;
+}
+
+.litegraph .dialog .property.boolean.bool-on .property_name {
+  color: #8c8;
+}
+
+.litegraph .dialog .property.boolean.bool-on .property_value {
+  color: #8c8;
+}
+
+.litegraph .dialog .property.boolean.bool-on .property_value::after {
+  content: '✓';
+  position: absolute;
+  right: 10px;
+  color: #8c8;
+}
+
+.litegraph .dialog .btn {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 20px;
+  margin-left: 8px;
+  background: linear-gradient(to bottom, #383850, #2a2a40);
+  color: #b8c7ff;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.litegraph .dialog .btn:hover {
+  background: linear-gradient(to bottom, #3a3a60, #2d2d50);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.litegraph .dialog .btn.delete {
+  background: linear-gradient(to bottom, #5a3030, #4a2020);
+  color: #faa;
+}
+
+.litegraph .dialog .btn.delete:hover {
+  background: linear-gradient(to bottom, #803030, #6a2020);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(168, 50, 50, 0.4);
+}
+
+.litegraph .subgraph_property {
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.litegraph .subgraph_property:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.litegraph .subgraph_property.extra {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
+}
+
+.litegraph .subgraph_property span.name {
+  font-size: 1.1em;
+  padding-left: 4px;
+  color: #e0e0ff;
+  font-weight: 500;
+}
+
+.litegraph .subgraph_property span.type {
+  opacity: 0.6;
+  margin-right: 20px;
+  padding-left: 6px;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.litegraph .subgraph_property span.label {
+  display: inline-block;
+  width: 70px;
+  padding: 0 10px;
+  color: #b8c7ff;
+}
+
+.litegraph .subgraph_property input {
+  width: 180px;
+  color: #e0e0ff;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-right: 10px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+.litegraph .subgraph_property input:focus {
+  border-color: rgba(107, 138, 255, 0.5);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.25);
+}
+
+.litegraph .subgraph_property button {
+  background-color: #2a2a40;
+  color: #b8c7ff;
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.litegraph .subgraph_property button:hover {
+  background-color: #383850;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.litegraph .subgraph_property.extra {
+  color: #e0e0ff;
+}
+
+.litegraph .subgraph_property.extra input {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.litegraph .bullet_icon {
+  margin-left: 10px;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  background-color: #6b8aff;
+  display: inline-block;
+  margin-top: 2px;
+  margin-right: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.litegraph .bullet_icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.litegraph .bullet_icon:hover {
+  background-color: #90a8ff;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.litegraph .bullet_icon:hover::after {
+  opacity: 0.7;
+}
+
+/* OLD */
+
+.graphcontextmenu {
+  padding: 4px;
+  min-width: 100px;
+}
+
+.graphcontextmenu-title {
+  color: #dde;
+  background-color: #222;
+  margin: 0;
+  padding: 2px;
+  cursor: default;
+}
+
+.graphmenu-entry {
+  box-sizing: border-box;
+  margin: 2px;
+  padding-left: 20px;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  transition: all linear 0.3s;
+}
+
+.graphmenu-entry.event,
+.litemenu-entry.event {
+  border-left: 8px solid orange;
+  padding-left: 12px;
+}
+
+.graphmenu-entry.disabled {
+  opacity: 0.3;
+}
+
+.graphmenu-entry.submenu {
+  border-right: 2px solid #eee;
+}
+
+.graphmenu-entry:hover {
+  background-color: #555;
+}
+
+.graphmenu-entry.separator {
+  background-color: #111;
+  border-bottom: 1px solid #666;
+  height: 1px;
+  width: calc(100% - 20px);
+  -moz-width: calc(100% - 20px);
+  -webkit-width: calc(100% - 20px);
+}
+
+.graphmenu-entry .property_name {
+  display: inline-block;
+  text-align: left;
+  min-width: 80px;
+  min-height: 1.2em;
+}
+
+.graphmenu-entry .property_value,
+.litemenu-entry .property_value {
+  display: inline-block;
+  background-color: rgba(0, 0, 0, 0.5);
+  text-align: right;
+  min-width: 80px;
+  min-height: 1.2em;
+  vertical-align: middle;
+  padding-right: 10px;
+}
+
+.graphdialog {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  min-height: 2em;
+  background: linear-gradient(135deg, rgba(40, 40, 70, 0.9), rgba(30, 30, 55, 0.9));
+  color: #e0e0ff;
+  font-size: 1.2em;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(107, 138, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  z-index: 100;
+  transform-origin: top left;
+  animation: graphdialog-appear 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  overflow: hidden;
+}
+
+@keyframes graphdialog-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.graphdialog.rounded {
+  border-radius: 16px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, rgba(45, 45, 80, 0.9), rgba(35, 35, 65, 0.9));
+  border: 1px solid rgba(107, 138, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 20px rgba(107, 138, 255, 0.15);
+}
+
+.graphdialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0.7;
+}
+
+.graphdialog .name {
+  display: inline-block;
+  min-width: 70px;
+  min-height: 1.5em;
+  padding: 10px 15px;
+  color: #c4d3ff;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.graphdialog input,
+.graphdialog textarea,
+.graphdialog select {
+  margin: 6px 8px;
+  min-width: 80px;
+  min-height: 2em;
+  background: rgba(20, 20, 40, 0.4);
+  border: 1px solid rgba(107, 138, 255, 0.25);
+  border-radius: 8px;
+  color: #e0e0ff;
+  padding: 8px 15px;
+  outline: none;
+  font-size: 14px;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2) inset,
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.graphdialog input:focus,
+.graphdialog textarea:focus,
+.graphdialog select:focus {
+  border-color: rgba(107, 138, 255, 0.6);
+  background: rgba(30, 30, 60, 0.5);
+  box-shadow:
+    0 0 0 2px rgba(107, 138, 255, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.2) inset;
+  transform: translateY(-1px);
+}
+
+.graphdialog input::placeholder,
+.graphdialog textarea::placeholder {
+  color: rgba(224, 224, 255, 0.4);
+}
+
+.graphdialog textarea {
+  min-height: 150px;
+  line-height: 1.5;
+  resize: vertical;
+  padding: 12px 15px;
+}
+
+.graphdialog button {
+  margin: 8px;
+  vertical-align: top;
+  background: linear-gradient(135deg, #383860, #2d2d50);
+  color: #c4d3ff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.graphdialog button:hover {
+  background: linear-gradient(135deg, #434370, #383860);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: white;
+}
+
+.graphdialog button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2) inset;
+}
+
+.graphdialog button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: all 0.5s ease;
+  z-index: 1;
+}
+
+.graphdialog button:hover::before {
+  left: 100%;
+}
+
+.graphdialog button.rounded,
+.graphdialog input.rounded {
+  border-radius: 20px;
+  padding: 8px 22px;
+}
+
+.graphdialog .close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(107, 138, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.graphdialog .close-button::before,
+.graphdialog .close-button::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: #c4d3ff;
+  transition: all 0.2s ease;
+}
+
+.graphdialog .close-button::before {
+  transform: rotate(45deg);
+}
+
+.graphdialog .close-button::after {
+  transform: rotate(-45deg);
+}
+
+.graphdialog .close-button:hover {
+  background: rgba(107, 138, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.graphdialog .close-button:hover::before,
+.graphdialog .close-button:hover::after {
+  background: #ffffff;
+}
+
+.graphdialog .helper {
+  overflow: auto;
+  max-height: 200px;
+  margin: 8px;
+  padding: 8px;
+  background: rgba(20, 20, 40, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(107, 138, 255, 0.1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(107, 138, 255, 0.4) rgba(0, 0, 0, 0.1);
+}
+
+.graphdialog .helper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.graphdialog .helper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.graphdialog .helper::-webkit-scrollbar-thumb {
+  background: rgba(107, 138, 255, 0.4);
+  border-radius: 3px;
+}
+
+.graphdialog .helper::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 138, 255, 0.6);
+}
+
+.graphdialog .help-item {
+  padding: 8px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.graphdialog .help-item:hover,
+.graphdialog .help-item.selected {
+  cursor: pointer;
+  background: rgba(107, 138, 255, 0.2);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.graphdialog .help-item.selected {
+  background: rgba(107, 138, 255, 0.3);
+  border-left: 3px solid #6b8aff;
+  padding-left: 15px;
+}
+
+.graphdialog .help-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #b8c7ff;
+}
+
+.graphdialog .dialog-section {
+  margin: 15px 0;
+  padding: 0 15px;
+}
+
+.graphdialog .dialog-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #b8c7ff;
+}
+
+.graphdialog .dialog-row {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.graphdialog .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* 增强版 litegraph .graphdialog */
+.litegraph .graphdialog {
+  display: flex;
+  align-items: center;
+  border-radius: 20px;
+  padding: 6px 15px;
+  position: fixed;
+  background: linear-gradient(135deg, rgba(45, 45, 80, 0.95), rgba(30, 30, 60, 0.95));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(107, 138, 255, 0.15);
+  border: 1px solid rgba(107, 138, 255, 0.3);
+  animation: graphdialog-slide-in 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  transform-origin: center;
+}
+
+@keyframes graphdialog-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.litegraph .graphdialog::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(107, 138, 255, 0.15) inset;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.litegraph .graphdialog:hover::after {
+  opacity: 1;
+}
+
+.litegraph .graphdialog .name {
+  padding: 0 6px 0 2px;
+  min-height: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #b8c7ff;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
+.litegraph .graphdialog .value {
+  font-size: 16px;
+  min-height: 0;
+  margin: 0 12px;
+  padding: 6px 12px;
+  background: rgba(20, 20, 40, 0.4);
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  border-radius: 10px;
+  color: #e0e0ff;
+  transition: all 0.2s ease;
+}
+
+.litegraph .graphdialog .value:focus {
+  border-color: rgba(107, 138, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.15);
+  outline: none;
+}
+
+.litegraph .graphdialog input[type='checkbox'] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: rgba(20, 20, 40, 0.4);
+  border: 1px solid rgba(107, 138, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+  margin: 0 10px;
+}
+
+.litegraph .graphdialog input[type='checkbox']:checked {
+  background-color: #6b8aff;
+  border-color: #5a79ee;
+}
+
+.litegraph .graphdialog input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.litegraph .graphdialog input[type='checkbox']:focus {
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.15);
+  outline: none;
+}
+
+.litegraph .graphdialog button {
+  padding: 7px 18px;
+  margin: 0 6px;
+  border-radius: 20px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #383860, #2d2d50);
+  color: #c4d3ff;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.litegraph .graphdialog button:hover {
+  background: linear-gradient(135deg, #434370, #383860);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: white;
+}
+
+.litegraph .graphdialog button.confirm {
+  background: linear-gradient(135deg, #4a6bff, #3855db);
+  color: white;
+}
+
+.litegraph .graphdialog button.confirm:hover {
+  background: linear-gradient(135deg, #5a7bff, #4a6bff);
+}
+
+.litegraph .graphdialog button.cancel {
+  background: linear-gradient(135deg, #45455f, #35354a);
+}
+
+.litegraph .graphdialog button.cancel:hover {
+  background: linear-gradient(135deg, #55556f, #45455f);
+}
+
+.litegraph .graphdialog select {
+  background: rgba(20, 20, 40, 0.4)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23b8c7ff' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>")
+    no-repeat;
+  background-position: calc(100% - 15px) center;
+  padding: 6px 35px 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  color: #e0e0ff;
+  appearance: none;
+  min-width: 120px;
+}
+
+.litegraph .graphdialog select:focus {
+  border-color: rgba(107, 138, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.15);
+  outline: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .litegraph .dialog {
+    width: 95%;
+    margin-left: -47.5%;
+  }
+
+  .litegraph .dialog .property_name {
+    width: 120px;
+  }
+
+  .litegraph .dialog .property_value {
+    min-width: 150px;
+  }
+}
+
+/* 节点样式优化 */
+.node-box {
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.node-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* 连接点美化 */
+.litegraph-node .connection-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.litegraph-node .connection-point:hover {
+  transform: scale(1.5);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+/* 连线样式 */
+.litegraph-link {
+  stroke-width: 2px;
+  transition: stroke-width 0.2s ease;
+}
+
+.litegraph-link:hover {
+  stroke-width: 3px;
+}
+
+/* 滚动条美化 */
+.litegraph .dialog .dialog-content::-webkit-scrollbar,
+.litegraph.litesearchbox .helper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.litegraph .dialog .dialog-content::-webkit-scrollbar-track,
+.litegraph.litesearchbox .helper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.litegraph .dialog .dialog-content::-webkit-scrollbar-thumb,
+.litegraph.litesearchbox .helper::-webkit-scrollbar-thumb {
+  background: rgba(107, 138, 255, 0.4);
+  border-radius: 4px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.litegraph .dialog .dialog-content::-webkit-scrollbar-thumb:hover,
+.litegraph.litesearchbox .helper::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 138, 255, 0.6);
+}
+
+/* 美化输入框样式 */
+.litegraph input[type='text'],
+.litegraph input[type='number'],
+.litegraph input[type='password'],
+.litegraph textarea {
+  background: rgba(30, 30, 50, 0.3);
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  color: #e0e0ff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) inset;
+}
+
+.litegraph input[type='text']:focus,
+.litegraph input[type='number']:focus,
+.litegraph input[type='password']:focus,
+.litegraph textarea:focus {
+  border-color: #6b8aff;
+  box-shadow:
+    0 0 0 2px rgba(107, 138, 255, 0.15),
+    0 2px 5px rgba(0, 0, 0, 0.1) inset;
+  outline: none;
+  background: rgba(40, 40, 70, 0.3);
+}
+
+.litegraph input[type='text']::placeholder,
+.litegraph input[type='number']::placeholder,
+.litegraph input[type='password']::placeholder,
+.litegraph textarea::placeholder {
+  color: rgba(224, 224, 255, 0.4);
+}
+
+/* 输入元素状态样式 */
+.litegraph input:disabled,
+.litegraph select:disabled,
+.litegraph textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 美化选择框 */
+.litegraph select {
+  appearance: none;
+  background: rgba(30, 30, 50, 0.3)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23b8c7ff' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>")
+    no-repeat;
+  background-position: calc(100% - 12px) center;
+  padding-right: 30px;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  color: #e0e0ff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.litegraph select:focus {
+  border-color: #6b8aff;
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.15);
+  outline: none;
+}
+
+/* 美化复选框 */
+.litegraph input[type='checkbox'] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: rgba(30, 30, 50, 0.3);
+  border: 1px solid rgba(107, 138, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+
+.litegraph input[type='checkbox']:checked {
+  background-color: #6b8aff;
+  border-color: #5a79ee;
+}
+
+.litegraph input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.litegraph input[type='checkbox']:focus {
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.15);
+  outline: none;
+}
+
+/* 美化单选按钮 */
+.litegraph input[type='radio'] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: rgba(30, 30, 50, 0.3);
+  border: 1px solid rgba(107, 138, 255, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+
+.litegraph input[type='radio']:checked {
+  border-color: #6b8aff;
+  border-width: 5px;
+}
+
+.litegraph input[type='radio']:focus {
+  box-shadow: 0 0 0 2px rgba(107, 138, 255, 0.15);
+  outline: none;
+}
+
+/* 美化按钮样式 */
+.litegraph button {
+  background: linear-gradient(135deg, #383860, #2d2d50);
+  color: #c4d3ff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.litegraph button:hover {
+  background: linear-gradient(135deg, #434370, #383860);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: white;
+}
+
+.litegraph button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2) inset;
+}
+
+.litegraph button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.5s ease;
+}
+
+.litegraph button:hover::before {
+  left: 100%;
+}
+
+.litegraph button.primary {
+  background: linear-gradient(135deg, #4a6bff, #3a5aef);
+  color: white;
+}
+
+.litegraph button.primary:hover {
+  background: linear-gradient(135deg, #5a7bff, #4a6bff);
+}
+
+.litegraph button.danger {
+  background: linear-gradient(135deg, #d93a3a, #b52c2c);
+  color: white;
+}
+
+.litegraph button.danger:hover {
+  background: linear-gradient(135deg, #e84a4a, #d93a3a);
+}
+
+.litegraph button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 改进节点样式 */
+.litegraph-node {
+  background: linear-gradient(135deg, #323250, #252545);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translateZ(0);
+  perspective: 1000px;
+}
+
+.litegraph-node:hover {
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(107, 138, 255, 0.3);
+  transform: translateY(-3px) translateZ(0);
+}
+
+.litegraph-node.selected {
+  box-shadow:
+    0 0 0 2px #6b8aff,
+    0 8px 25px rgba(0, 0, 0, 0.5);
+  animation: node-pulse 2s ease infinite;
+}
+
+@keyframes node-pulse {
+  0% {
+    box-shadow:
+      0 0 0 2px rgba(107, 138, 255, 0.8),
+      0 8px 25px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(107, 138, 255, 0.6),
+      0 8px 25px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(107, 138, 255, 0.8),
+      0 8px 25px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.litegraph-node .title-bar {
+  background: linear-gradient(to right, #3a3a65, #2d2d55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #e0e0ff;
+  position: relative;
+  overflow: hidden;
+}
+
+.litegraph-node .title-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  animation: title-shine 3s ease-out infinite;
+  animation-delay: calc(var(--node-index, 0) * 0.5s);
+}
+
+@keyframes title-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  20%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Connection points with glow effect */
+.litegraph-node .connection-point {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.litegraph-node .connection-point::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, currentColor 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.litegraph-node .connection-point:hover {
+  transform: scale(1.5);
+  box-shadow: 0 0 10px currentColor;
+}
+
+.litegraph-node .connection-point:hover::before {
+  opacity: 0.5;
+  animation: pulse-glow 1.5s ease infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+.litegraph-node .connection-point.input {
+  background-color: #6b8aff;
+  box-shadow: 0 0 5px rgba(107, 138, 255, 0.5);
+}
+
+.litegraph-node .connection-point.output {
+  background-color: #ff6b8a;
+  box-shadow: 0 0 5px rgba(255, 107, 138, 0.5);
+}
+
+.litegraph-node .connection-point.event {
+  background-color: #ffbb3c;
+  box-shadow: 0 0 5px rgba(255, 187, 60, 0.5);
+}
+
+/* Enhanced link animations */
+.litegraph-link {
+  stroke-width: 2px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.litegraph-link:hover {
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.litegraph-link-flow {
+  stroke-dasharray: 10 5;
+  animation: link-flow 30s linear infinite;
+}
+
+@keyframes link-flow {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+/* Enhanced button styles */
+.litegraph button {
+  background: linear-gradient(135deg, #383860, #2d2d50);
+  color: #c4d3ff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.litegraph button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: all 0.5s ease;
+  z-index: -1;
+}
+
+.litegraph button:hover {
+  background: linear-gradient(135deg, #434370, #383860);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: white;
+}
+
+.litegraph button:hover::before {
+  left: 100%;
+}
+
+/* Mouse following glow effect */
+.lgraphcanvas::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(107, 138, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+  filter: blur(20px);
+}
+
+.lgraphcanvas.mouse-active::after {
+  opacity: 1;
+}
+
+/* Add this JavaScript to enable mouse glow effect:
+document.querySelector('.lgraphcanvas').addEventListener('mousemove', function(e) {
+  const canvas = this;
+  canvas.classList.add('mouse-active');
+  canvas.style.setProperty('--mouse-x', e.clientX + 'px');
+  canvas.style.setProperty('--mouse-y', e.clientY + 'px');
+  const glow = canvas.querySelector('::after');
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
+});
+
+document.querySelector('.lgraphcanvas').addEventListener('mouseleave', function() {
+  this.classList.remove('mouse-active');
+});
+*/
+
+/* 3D Transforms for context menu */
+.litegraph.litecontextmenu .litemenu-entry:hover {
+  background-color: rgba(74, 107, 175, 0.2) !important;
+  color: #ffffff;
+  /* transform: translateX(2px) scale(1.02); */
+}
+
+/* Enhanced glassmorphism for dialogs */
+.litegraph.litesearchbox {
+  font-family: 'Inter', 'Roboto', Tahoma, sans-serif;
+  position: absolute;
+  background: linear-gradient(135deg, rgba(30, 30, 46, 0.8), rgba(40, 40, 56, 0.8));
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: search-appear 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  transform-origin: top;
+  transform: none !important;
+}
+
+@keyframes search-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Input fields with advanced effects */
+.litegraph input[type='text'],
+.litegraph input[type='number'],
+.litegraph input[type='password'],
+.litegraph textarea {
+  background: rgba(30, 30, 50, 0.3);
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  color: #e0e0ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2) inset,
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.litegraph input[type='text']:focus,
+.litegraph input[type='number']:focus,
+.litegraph input[type='password']:focus,
+.litegraph textarea:focus {
+  border-color: #6b8aff;
+  background: rgba(40, 40, 70, 0.4);
+  box-shadow:
+    0 0 0 3px rgba(107, 138, 255, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.2) inset;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+/* Select boxes with custom styling */
+.litegraph select {
+  appearance: none;
+  background: rgba(30, 30, 50, 0.3)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23b8c7ff' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>")
+    no-repeat;
+  background-position: calc(100% - 15px) center;
+  padding: 10px 40px 10px 15px;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  color: #e0e0ff;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2) inset,
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.litegraph select:focus {
+  border-color: #6b8aff;
+  box-shadow:
+    0 0 0 3px rgba(107, 138, 255, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1) inset;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+/* Loading animation with glow */
+.litegraph-loading {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(107, 138, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #6b8aff;
+  animation: litegraph-spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+  position: relative;
+}
+
+.litegraph-loading::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: radial-gradient(circle, rgba(107, 138, 255, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: loading-glow 1.5s ease infinite alternate;
+}
+
+@keyframes loading-glow {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes litegraph-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tooltip with animation */
+.litegraph-tooltip {
+  background: linear-gradient(135deg, rgba(40, 40, 65, 0.95), rgba(30, 30, 55, 0.95));
+  color: #e0e0ff;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  max-width: 300px;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+.litegraph-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Enhanced notification system */
+.litegraph-notification {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: linear-gradient(135deg, rgba(50, 50, 80, 0.9), rgba(40, 40, 70, 0.9));
+  border-left: 4px solid #6b8aff;
+  border-radius: 10px;
+  padding: 15px 20px;
+  color: #e0e0ff;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  z-index: 10000;
+  max-width: 320px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transform: translateX(120%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.litegraph-notification.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Grid background with subtle animation */
+.lgraphcanvas.with-animated-grid {
+  background-image:
+    linear-gradient(rgba(107, 138, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(107, 138, 255, 0.05) 1px, transparent 1px);
+  background-size: 25px 25px;
+  animation: grid-shift 120s linear infinite;
+}
+
+@keyframes grid-shift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+/* Rest of existing styles... */
+
+/* Subgraph Dialog Styles - 修复选择器和增强效果 */
+.litegraph.dialog.subgraph_dialog,
+.litegraph .dialog.subgraph_dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 450px;
+  min-height: 300px;
+  background: linear-gradient(135deg, rgba(45, 45, 68, 0.95), rgba(37, 37, 54, 0.95));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 12px;
+  border: 1px solid rgba(107, 138, 255, 0.2);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 20px rgba(107, 138, 255, 0.1) inset;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  color: #e0e0ff;
+  animation: dialog-appear 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  overflow: hidden;
+  width: auto !important;
+}
+
+.litegraph.dialog.subgraph_dialog::before,
+.litegraph .dialog.subgraph_dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(107, 138, 255, 0.4), transparent);
+  opacity: 0.7;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-header,
+.litegraph .dialog.subgraph_dialog .dialog-header {
+  color: #e0e0ff;
+  background: linear-gradient(to right, #252536, #2d2d44);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-header::after,
+.litegraph .dialog.subgraph_dialog .dialog-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 93, 217, 0.1) 0%,
+    rgba(74, 110, 224, 0.5) 50%,
+    rgba(58, 93, 217, 0.1) 100%
+  );
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-title,
+.litegraph .dialog.subgraph_dialog .dialog-title {
+  font:
+    18px 'Inter',
+    'Roboto',
+    sans-serif;
+  margin: 0;
+  padding: 10px;
+  display: inline-block;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content,
+.litegraph .dialog.subgraph_dialog .dialog-content {
+  height: calc(100% - 110px);
+  width: 100%;
+  min-height: 100px;
+  display: inline-block;
+  color: #e0e0ff;
+  overflow: auto;
+  padding: 15px 20px;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-track,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb {
+  background: rgba(74, 107, 175, 0.6);
+  border-radius: 4px;
+  border: 2px solid rgba(20, 20, 35, 0.8);
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb:hover,
+.litegraph .dialog.subgraph_dialog .dialog-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 107, 175, 0.8);
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-footer,
+.litegraph .dialog.subgraph_dialog .dialog-footer {
+  height: 60px;
+  padding: 10px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.litegraph.dialog.subgraph_dialog .dialog-footer::before,
+.litegraph .dialog.subgraph_dialog .dialog-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 93, 217, 0.1) 0%,
+    rgba(74, 110, 224, 0.5) 50%,
+    rgba(58, 93, 217, 0.1) 100%
+  );
+}
+
+.litegraph.dialog.subgraph_dialog .close,
+.litegraph .dialog.subgraph_dialog .close {
+  float: right;
+  margin: 12px;
+  margin-right: 15px;
+  cursor: pointer;
+  font-size: 1.5em;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.litegraph.dialog.subgraph_dialog .close:hover,
+.litegraph .dialog.subgraph_dialog .close:hover {
+  color: white;
+  transform: rotate(90deg);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.litegraph.dialog.subgraph_dialog input,
+.litegraph.dialog.subgraph_dialog select,
+.litegraph .dialog.subgraph_dialog input,
+.litegraph .dialog.subgraph_dialog select {
+  width: 180px;
+  color: #e0e0ff;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-right: 10px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) inset;
+}
+
+.litegraph.dialog.subgraph_dialog input:focus,
+.litegraph.dialog.subgraph_dialog select:focus,
+.litegraph .dialog.subgraph_dialog input:focus,
+.litegraph .dialog.subgraph_dialog select:focus {
+  border-color: rgba(107, 138, 255, 0.5);
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(107, 138, 255, 0.25),
+    0 2px 5px rgba(0, 0, 0, 0.1) inset;
+  transform: translateY(-1px);
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property,
+.litegraph .dialog.subgraph_dialog .subgraph_property {
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(20, 20, 35, 0.2);
+  border: 1px solid rgba(74, 107, 175, 0.05);
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property::before,
+.litegraph .dialog.subgraph_dialog .subgraph_property::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(107, 138, 255, 0.05), transparent);
+  opacity: 0;
+  transition: all 0.8s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property:hover,
+.litegraph .dialog.subgraph_dialog .subgraph_property:hover {
+  background-color: rgba(30, 30, 50, 0.3);
+  border-color: rgba(74, 107, 175, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property:hover::before,
+.litegraph .dialog.subgraph_dialog .subgraph_property:hover::before {
+  left: 100%;
+  opacity: 1;
+}
+
+/* 特别增强 extra 属性样式 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra {
+  margin-top: 15px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  position: relative;
+  width: calc(100% - 24px);
+  max-width: 600px;
+}
+
+/* 移除左侧边框 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra::before,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra::before {
+  display: none;
+}
+
+/* 移除之前的行容器样式 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra .top-row,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra .top-row,
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra .bottom-row,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra .bottom-row {
+  display: contents;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input {
+  width: 110px;
+  padding: 5px 10px;
+  font-size: 12px;
+  height: 26px;
+  margin: 0;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0ff;
+  transition: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input:focus,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+  outline: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra span.label,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra span.label {
+  min-width: 40px;
+  font-size: 17px;
+  padding: 0 5px;
+  height: 22px;
+  line-height: 22px;
+  margin: 0;
+  white-space: nowrap;
+  background: none;
+  color: #c4d3ff;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra button,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra button {
+  padding: 5px 12px;
+  font-size: 12px;
+  height: 26px;
+  min-width: 70px;
+  border-radius: 4px;
+  margin-left: auto;
+  background-color: rgba(40, 40, 60, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #c4d3ff;
+  transition: none;
+  box-shadow: none;
+}
+
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra button:hover,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra button:hover {
+  background-color: rgba(50, 50, 70, 0.7);
+  transform: none;
+  box-shadow: none;
+}
+
+/* 确保name的输入框和type的输入框紧凑排列 - 横向布局不需要特殊处理 */
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input.name,
+.litegraph.dialog.subgraph_dialog .subgraph_property.extra input.type,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input.name,
+.litegraph .dialog.subgraph_dialog .subgraph_property.extra input.type {
+  width: 110px;
+  margin: 0;
+}

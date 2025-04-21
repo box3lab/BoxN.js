@@ -184,8 +184,8 @@ const SYSTEM_PROMPT = `你是LiteGraph节点编辑器的AI助手，专门帮助�
 2. 继承自LGraphNode
 3. 在constructor中设置inputs/outputs
 4. 实现onExecute方法处理节点逻辑
-5. 正确注册节点：LiteGraph.registerNodeType('类别/名称', 类名)
-6. 可以设置节点颜色、形状等美观属性
+5. 可以设置节点颜色、形状等美观属性
+6. 生成的代码遵循cjs规范
 
 代码示例:
 \`\`\`javascript
@@ -202,7 +202,7 @@ class RandomColorNode extends LGraphNode {
     this.setOutputData(0, color);
   }
 }
-LiteGraph.registerNodeType("color/random", RandomColorNode);
+LiteGraph.registerNodeType("color/random_color", RandomColorNode);
 \`\`\`
 `;
 
@@ -386,7 +386,7 @@ export default defineComponent({
                   )
                 }
                       </span>
-                      <span class="apply-text">${isApplied ? '重新应用' : (isApplying ? '应用中...' : '应用节点')}</span>
+                      <span class="apply-text">${isApplied ? '重新注册' : (isApplying ? '已注册...' : '注册节点')}</span>
                     </button>
                   </div>
                 </div>
@@ -866,7 +866,7 @@ export default defineComponent({
           // 针对单个或多个节点创建不同的通知消息
           if (successCount === 1) {
             const node = registeredNodes[0];
-            notificationMessage.value = `节点 ${node.className} 已成功注册为 ${node.path}！使用"${node.path}"搜索可找到此节点`;
+            notificationMessage.value = `节点 ${node.className} 已成功注册为 custom/${node.path}！`;
           } else {
             notificationMessage.value = `成功注册了 ${successCount} 个节点！详见聊天窗口`;
           }
