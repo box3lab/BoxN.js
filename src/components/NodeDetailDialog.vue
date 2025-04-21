@@ -494,18 +494,21 @@ export default defineComponent({
 <style scoped>
 .node-detail-sidebar {
   position: fixed;
-  top: 0;
+  top: 50px;
   left: 0;
   bottom: 0;
   width: 340px;
-  background-color: #1a1a1a;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background: rgba(15, 15, 25, 0.95);
+  border-right: 1px solid rgba(156, 70, 255, 0.15);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  z-index: 1000;
+  z-index: 40000;
   transform: translateX(0);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @keyframes slide-in {
@@ -523,8 +526,9 @@ export default defineComponent({
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: linear-gradient(135deg, #252530 0%, #1a1a24 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, rgba(25, 25, 38, 0.95) 0%, rgba(16, 16, 28, 0.95) 100%);
+  border-right: 1px solid rgba(156, 70, 255, 0.15);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-header {
@@ -532,9 +536,10 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   padding: 15px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: linear-gradient(90deg, #252530 0%, #1e1e28 100%);
+  border-bottom: 1px solid rgba(156, 70, 255, 0.15);
+  background: rgba(10, 10, 18, 0.95);
   min-height: 64px;
+  position: relative;
 }
 
 .sidebar-header::after {
@@ -545,9 +550,10 @@ export default defineComponent({
   right: 0;
   height: 1px;
   background: linear-gradient(90deg,
-      rgba(58, 93, 217, 0.1) 0%,
-      rgba(74, 110, 224, 0.5) 50%,
-      rgba(58, 93, 217, 0.1) 100%);
+      rgba(156, 70, 255, 0.1) 0%,
+      rgba(156, 70, 255, 0.5) 50%,
+      rgba(156, 70, 255, 0.1) 100%);
+  z-index: 1;
 }
 
 .header-left {
@@ -559,11 +565,11 @@ export default defineComponent({
 .node-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, rgba(66, 99, 205, 0.2) 0%, rgba(74, 110, 224, 0.4) 100%);
+  background: linear-gradient(135deg, rgba(156, 70, 255, 0.2) 0%, rgba(156, 70, 255, 0.4) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
@@ -601,11 +607,12 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  background: rgba(156, 70, 255, 0.1);
 }
 
 .close-btn:hover {
   color: #fff;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(156, 70, 255, 0.2);
   transform: rotate(90deg);
 }
 
@@ -613,15 +620,17 @@ export default defineComponent({
   padding: 15px;
   overflow-y: auto;
   flex: 1;
-  background-color: #1a1a1a;
+  background: linear-gradient(135deg, rgba(20, 20, 35, 0.5) 0%, rgba(15, 15, 25, 0.5) 100%);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 70, 255, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-footer {
-  padding: 12px 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-top: 1px solid rgba(156, 70, 255, 0.15);
   display: flex;
   justify-content: flex-end;
-  background-color: #1e1e28;
+  background: linear-gradient(to top, rgba(10, 10, 18, 0.95), rgba(15, 15, 25, 0.95));
   position: relative;
 }
 
@@ -633,38 +642,61 @@ export default defineComponent({
   right: 0;
   height: 1px;
   background: linear-gradient(90deg,
-      rgba(58, 93, 217, 0.1) 0%,
-      rgba(74, 110, 224, 0.5) 50%,
-      rgba(58, 93, 217, 0.1) 100%);
+      rgba(156, 70, 255, 0.1) 0%,
+      rgba(156, 70, 255, 0.5) 50%,
+      rgba(156, 70, 255, 0.1) 100%);
 }
 
 .btn {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   font-size: 14px;
-  background-color: #333;
+  background: rgba(30, 30, 45, 0.6);
   color: #e0e0e0;
-  transition: all 0.2s;
+  transition: all 0.3s;
   font-weight: 500;
+  border: 1px solid rgba(156, 70, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0) 100%);
+  transform: translateX(-100%);
+  transition: transform 0.8s;
+}
+
+.btn:hover::after {
+  transform: translateX(100%);
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #3a5dd9 0%, #4a6ee0 100%);
+  background: linear-gradient(90deg, rgba(156, 70, 255, 0.7) 0%, rgba(156, 70, 255, 0.6) 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(58, 93, 217, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  box-shadow: 0 4px 15px rgba(156, 70, 255, 0.3);
+  border: none;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(90deg, #4a6ee0 0%, #5a7ef0 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(58, 93, 217, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  background: linear-gradient(90deg, rgba(156, 70, 255, 0.8) 0%, rgba(156, 70, 255, 0.7) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(156, 70, 255, 0.4);
 }
 
 .btn-primary:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(58, 93, 217, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(156, 70, 255, 0.3);
 }
 
 .node-info {
@@ -674,32 +706,59 @@ export default defineComponent({
 }
 
 .info-card {
-  background-color: rgba(30, 30, 40, 0.4);
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+  background: linear-gradient(145deg, rgba(25, 25, 40, 0.5), rgba(20, 20, 35, 0.5));
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(156, 70, 255, 0.1);
   transition: all 0.3s;
+  margin-bottom: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-left: 3px solid rgba(156, 70, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      rgba(156, 70, 255, 0) 0%,
+      rgba(156, 70, 255, 0.03) 50%,
+      rgba(156, 70, 255, 0) 100%);
+  transform: translateX(-100%);
+  transition: transform 0.8s ease;
+  pointer-events: none;
 }
 
 .info-card:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  background-color: rgba(36, 36, 48, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(156, 70, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.info-card:hover::before {
+  transform: translateX(100%);
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .label {
   font-weight: 600;
-  color: #aaa;
+  color: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .value {
@@ -707,14 +766,15 @@ export default defineComponent({
 }
 
 .node-type {
-  color: #4a6ee0;
-  background-color: rgba(74, 110, 224, 0.1);
-  padding: 4px 10px;
-  border-radius: 4px;
+  color: white;
+  background: linear-gradient(145deg, rgba(156, 70, 255, 0.2), rgba(156, 70, 255, 0.1));
+  padding: 6px 12px;
+  border-radius: 10px;
   font-size: 12px;
-  border-left: 3px solid #4a6ee0;
   font-weight: 500;
   display: inline-block;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(156, 70, 255, 0.2);
+  border-left: 3px solid rgba(156, 70, 255, 0.7);
 }
 
 .properties-list,
@@ -723,10 +783,10 @@ export default defineComponent({
   flex-direction: column;
   gap: 10px;
   margin-left: 10px;
-  border-left: 2px solid rgba(74, 110, 224, 0.4);
-  padding-left: 12px;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  border-left: 2px solid rgba(156, 70, 255, 0.4);
+  padding-left: 15px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .property-item,
@@ -734,58 +794,90 @@ export default defineComponent({
   display: flex;
   align-items: center;
   transition: all 0.2s;
-  border-radius: 4px;
-  padding: 3px 6px;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .property-item:hover,
 .slot-item:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .property-name,
 .slot-name {
   min-width: 90px;
   font-weight: 500;
-  color: #ccc;
-  margin-right: 8px;
+  color: #ddd;
+  margin-right: 10px;
   font-size: 12px;
 }
 
 .property-value,
 .slot-type {
   flex: 1;
-  color: #ddd;
+  color: #fff;
   font-size: 12px;
 }
 
-.readonly {
-  opacity: 0.7;
-  font-style: italic;
-}
-
 input.property-value {
-  border: 1px solid #444;
-  padding: 6px 10px;
-  border-radius: 4px;
-  background-color: #252525;
+  border: 1px solid rgba(156, 70, 255, 0.3);
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: rgba(30, 30, 45, 0.6);
   color: #e0e0e0;
   transition: all 0.2s;
   font-size: 12px;
   width: 100%;
   max-width: 140px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 input.property-value:hover {
-  border-color: #555;
-  background-color: #2a2a2a;
+  border-color: rgba(156, 70, 255, 0.5);
+  background-color: rgba(35, 35, 50, 0.6);
 }
 
 input.property-value:focus {
   outline: none;
   border-color: #4a6ee0;
-  background-color: #2a2a2a;
-  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+  background-color: rgba(40, 40, 55, 0.6);
+  box-shadow: 0 0 0 3px rgba(156, 70, 255, 0.2);
+}
+
+select.property-value {
+  border: 1px solid rgba(156, 70, 255, 0.3);
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: rgba(30, 30, 45, 0.6);
+  color: #e0e0e0;
+  transition: all 0.2s;
+  font-size: 12px;
+  min-width: 100px;
+  max-width: 140px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 自定义下拉列表选项样式 - 仅支持Firefox */
+select.property-value option {
+  background-color: #252525;
+  color: #e0e0e0;
+  padding: 8px;
+}
+
+select.property-value:hover {
+  border-color: rgba(156, 70, 255, 0.5);
+  background-color: rgba(35, 35, 50, 0.6);
+}
+
+select.property-value:focus {
+  outline: none;
+  border-color: #4a6ee0;
+  background-color: rgba(40, 40, 55, 0.6);
+  box-shadow: 0 0 0 3px rgba(156, 70, 255, 0.2);
 }
 
 .select-value {
@@ -797,55 +889,51 @@ input.property-value:focus {
   padding-right: 24px;
 }
 
-select.property-value {
-  border: 1px solid #444;
-  padding: 6px 8px;
-  border-radius: 4px;
-  background-color: #252525;
-  color: #e0e0e0;
-  transition: all 0.2s;
-  font-size: 12px;
-  min-width: 100px;
-  max-width: 140px;
-  cursor: pointer;
+.readonly {
+  opacity: 0.7;
+  font-style: italic;
 }
 
-select.property-value:hover {
-  border-color: #555;
-  background-color: #2a2a2a;
+/* 滚动条样式 */
+.sidebar-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-select.property-value:focus {
-  outline: none;
-  border-color: #4a6ee0;
-  background-color: #2a2a2a;
-  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+.sidebar-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }
 
-/* 自定义下拉列表选项样式 - 仅支持Firefox */
-select.property-value option {
-  background-color: #252525;
-  color: #e0e0e0;
-  padding: 8px;
+.sidebar-body::-webkit-scrollbar-thumb {
+  background: rgba(156, 70, 255, 0.6);
+  border-radius: 3px;
+  border: 1px solid rgba(20, 20, 35, 0.8);
+}
+
+.sidebar-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 70, 255, 0.8);
 }
 
 /* 开关样式 */
 .toggle-switch-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .boolean-value {
   font-size: 12px;
   min-width: 40px;
+  color: #bbb;
+  font-weight: 500;
 }
 
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 40px;
-  height: 20px;
+  width: 46px;
+  height: 22px;
 }
 
 .toggle-switch input {
@@ -861,9 +949,10 @@ select.property-value option {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #444;
+  background: linear-gradient(145deg, rgba(50, 50, 65, 0.6), rgba(40, 40, 55, 0.6));
   transition: .3s;
-  border-radius: 20px;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .slider:before {
@@ -871,28 +960,28 @@ select.property-value option {
   content: "";
   height: 16px;
   width: 16px;
-  left: 2px;
-  bottom: 2px;
+  left: 3px;
+  bottom: 3px;
   background-color: white;
   transition: .3s;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 input:checked+.slider {
-  background-color: #4a6ee0;
+  background: linear-gradient(145deg, #4a6ee0, #3a5dd9);
 }
 
 input:focus+.slider {
-  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+  box-shadow: 0 0 0 3px rgba(156, 70, 255, 0.2);
 }
 
 input:checked+.slider:before {
-  transform: translateX(20px);
+  transform: translateX(24px);
 }
 
 .slider.round {
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 .slider.round:before {
@@ -904,14 +993,23 @@ input:checked+.slider:before {
   display: flex;
   align-items: center;
   max-width: 140px;
+  background: rgba(30, 30, 45, 0.6);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(156, 70, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .number-value {
   text-align: center;
   flex: 1;
-  margin: 0 2px;
+  margin: 0;
+  padding: 8px 5px;
   -moz-appearance: textfield;
-  /* Firefox */
+  border: none;
+  background: transparent;
+  color: #e0e0e0;
+  font-size: 12px;
 }
 
 .number-value::-webkit-outer-spin-button,
@@ -921,15 +1019,14 @@ input:checked+.slider:before {
 }
 
 .number-btn {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #333;
-  border: 1px solid #444;
+  background: rgba(40, 40, 60, 0.5);
+  border: none;
   color: #ddd;
-  border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
   user-select: none;
@@ -937,14 +1034,39 @@ input:checked+.slider:before {
 }
 
 .number-btn:hover {
-  background-color: #3a5dd9;
-  border-color: #4a6ee0;
+  background: linear-gradient(145deg, #4a6ee0, #3a5dd9);
   color: white;
 }
 
 .number-btn:active {
   transform: scale(0.95);
-  background-color: #304bb0;
+  background: linear-gradient(145deg, #3a5dd9, #2a4dc9);
+}
+
+/* 颜色选择器样式 */
+.color-picker {
+  width: 70px;
+  height: 30px;
+  padding: 2px;
+  background-color: transparent;
+  border: 1px solid rgba(156, 70, 255, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.color-picker:hover {
+  transform: scale(1.05);
+  border-color: rgba(156, 70, 255, 0.5);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.color-picker:focus {
+  outline: none;
+  border-color: #4a6ee0;
+  box-shadow: 0 0 0 3px rgba(156, 70, 255, 0.2);
 }
 
 .no-slots {
@@ -955,8 +1077,8 @@ input:checked+.slider:before {
 
 /* 插槽类型徽章 */
 .slot-type {
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 5px 10px;
+  border-radius: 10px;
   font-size: 11px;
   font-weight: 500;
   text-align: center;
@@ -965,94 +1087,93 @@ input:checked+.slider:before {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+}
+
+.slot-item:hover .slot-type {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .type-number {
   background-color: rgba(66, 153, 225, 0.15);
   color: #63b3ed;
   border-left: 3px solid #63b3ed;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-string {
   background-color: rgba(72, 187, 120, 0.15);
   color: #68d391;
   border-left: 3px solid #68d391;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-boolean {
   background-color: rgba(237, 137, 54, 0.15);
   color: #f6ad55;
   border-left: 3px solid #f6ad55;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-object {
   background-color: rgba(159, 122, 234, 0.15);
   color: #b794f4;
   border-left: 3px solid #b794f4;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-array {
   background-color: rgba(159, 122, 234, 0.15);
   color: #b794f4;
   border-left: 3px solid #b794f4;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-color {
   background-color: rgba(237, 100, 166, 0.15);
   color: #f687b3;
   border-left: 3px solid #f687b3;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-vector {
   background-color: rgba(246, 173, 85, 0.15);
   color: #fbd38d;
   border-left: 3px solid #fbd38d;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-event {
   background-color: rgba(113, 128, 150, 0.15);
   color: #a0aec0;
   border-left: 3px solid #a0aec0;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-unknown {
   background-color: rgba(160, 174, 192, 0.15);
   color: #a0aec0;
   border-left: 3px solid #a0aec0;
+  border-radius: 10px;
+  padding: 5px;
 }
 
 .type-default {
   background-color: rgba(203, 213, 224, 0.15);
   color: #cbd5e0;
   border-left: 3px solid #cbd5e0;
-}
-
-/* 滚动条样式 */
-.sidebar-body::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.sidebar-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.sidebar-body::-webkit-scrollbar-thumb {
-  background: rgba(74, 107, 175, 0.6);
-  border-radius: 3px;
-  border: 1px solid rgba(20, 20, 35, 0.8);
-}
-
-.sidebar-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(74, 107, 175, 0.8);
-}
-
-/* Firefox样式 */
-.sidebar-body {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(74, 107, 175, 0.6) rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 5px;
 }
 
 /* 颜色选择器样式 */
@@ -1062,7 +1183,7 @@ input:checked+.slider:before {
   padding: 2px;
   background-color: transparent;
   border: 1px solid #444;
-  border-radius: 4px;
+  border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
@@ -1076,6 +1197,6 @@ input:checked+.slider:before {
 .color-picker:focus {
   outline: none;
   border-color: #4a6ee0;
-  box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+  box-shadow: 0 0 0 3px rgba(156, 70, 255, 0.2);
 }
 </style>

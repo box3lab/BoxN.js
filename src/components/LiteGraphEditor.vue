@@ -721,7 +721,7 @@ function loadSavedGraphsData() {
 <style scoped>
 #canvas-container {
   position: absolute;
-  top: 60px;
+  top: 50px;
   /* 给顶部工具栏预留空间 */
   left: 0;
   right: 0;
@@ -751,7 +751,7 @@ function loadSavedGraphsData() {
   color: white;
   padding: 10px 20px;
   border-radius: 4px;
-  z-index: 1000;
+  z-index: 10000;
   animation: fadeIn 0.3s ease;
 }
 
