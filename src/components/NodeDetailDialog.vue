@@ -1,7 +1,7 @@
 <template>
-  <div v-if="visible" class="node-detail-dialog" @click="close">
-    <div class="dialog-content" @click.stop>
-      <div class="dialog-header">
+  <div v-if="visible" class="node-detail-sidebar">
+    <div class="sidebar-content">
+      <div class="sidebar-header">
         <div class="header-left">
           <div class="node-icon">
             <span class="icon">📊</span>
@@ -11,7 +11,7 @@
         <button class="close-btn" @click="close">×</button>
       </div>
 
-      <div class="dialog-body" v-if="node">
+      <div class="sidebar-body" v-if="node">
         <div class="node-info">
           <div class="info-card">
             <div class="info-item">
@@ -85,8 +85,8 @@
         </div>
       </div>
 
-      <div class="dialog-footer">
-        <button class="btn btn-primary" @click="close">确定</button>
+      <div class="sidebar-footer">
+        <button class="btn btn-primary" @click="close">关闭</button>
       </div>
     </div>
   </div>
@@ -492,73 +492,55 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.node-detail-dialog {
+.node-detail-sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(3px);
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.dialog-content {
+  width: 340px;
   background-color: #1a1a1a;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 1px 0 0 rgba(255, 255, 255, 0.1) inset;
-  width: 550px;
-  max-width: 90%;
-  max-height: 85vh;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  color: #e0e0e0;
-  overflow: hidden;
-  animation: slideUp 0.3s ease-out;
+  z-index: 900;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dialog-header {
+@keyframes slide-in {
+  from {
+    transform: translateX(-340px);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #252530 0%, #1a1a24 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 22px;
+  padding: 15px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   background: linear-gradient(90deg, #252530 0%, #1e1e28 100%);
-  position: relative;
+  min-height: 64px;
 }
 
-.dialog-header::after {
+.sidebar-header::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  top: 64px;
   left: 0;
   right: 0;
   height: 1px;
@@ -575,18 +557,18 @@ export default defineComponent({
 }
 
 .node-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, rgba(66, 99, 205, 0.2) 0%, rgba(74, 110, 224, 0.4) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .icon {
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .icon-small {
@@ -594,22 +576,26 @@ export default defineComponent({
   margin-right: 4px;
 }
 
-.dialog-header h3 {
+.sidebar-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   color: #fff;
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 22px;
   cursor: pointer;
   color: #888;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -623,15 +609,15 @@ export default defineComponent({
   transform: rotate(90deg);
 }
 
-.dialog-body {
-  padding: 25px;
+.sidebar-body {
+  padding: 15px;
   overflow-y: auto;
   flex: 1;
   background-color: #1a1a1a;
 }
 
-.dialog-footer {
-  padding: 18px 22px;
+.sidebar-footer {
+  padding: 12px 15px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: flex-end;
@@ -639,7 +625,7 @@ export default defineComponent({
   position: relative;
 }
 
-.dialog-footer::before {
+.sidebar-footer::before {
   content: '';
   position: absolute;
   top: 0;
@@ -653,8 +639,8 @@ export default defineComponent({
 }
 
 .btn {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
   font-size: 14px;
@@ -684,13 +670,13 @@ export default defineComponent({
 .node-info {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
 }
 
 .info-card {
   background-color: rgba(30, 30, 40, 0.4);
-  border-radius: 10px;
-  padding: 18px;
+  border-radius: 8px;
+  padding: 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.03);
   transition: all 0.3s;
@@ -713,7 +699,7 @@ export default defineComponent({
   color: #aaa;
   display: flex;
   align-items: center;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .value {
@@ -723,9 +709,9 @@ export default defineComponent({
 .node-type {
   color: #4a6ee0;
   background-color: rgba(74, 110, 224, 0.1);
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
   border-left: 3px solid #4a6ee0;
   font-weight: 500;
   display: inline-block;
@@ -735,12 +721,12 @@ export default defineComponent({
 .slots-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-left: 12px;
+  gap: 10px;
+  margin-left: 10px;
   border-left: 2px solid rgba(74, 110, 224, 0.4);
-  padding-left: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-left: 12px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .property-item,
@@ -749,7 +735,7 @@ export default defineComponent({
   align-items: center;
   transition: all 0.2s;
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 3px 6px;
 }
 
 .property-item:hover,
@@ -759,16 +745,18 @@ export default defineComponent({
 
 .property-name,
 .slot-name {
-  min-width: 120px;
+  min-width: 90px;
   font-weight: 500;
   color: #ccc;
-  margin-right: 12px;
+  margin-right: 8px;
+  font-size: 12px;
 }
 
 .property-value,
 .slot-type {
   flex: 1;
   color: #ddd;
+  font-size: 12px;
 }
 
 .readonly {
@@ -778,12 +766,14 @@ export default defineComponent({
 
 input.property-value {
   border: 1px solid #444;
-  padding: 9px 12px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 4px;
   background-color: #252525;
   color: #e0e0e0;
   transition: all 0.2s;
-  font-size: 13px;
+  font-size: 12px;
+  width: 100%;
+  max-width: 140px;
 }
 
 input.property-value:hover {
@@ -802,20 +792,21 @@ input.property-value:focus {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
-  padding-right: 30px;
+  background-position: right 8px center;
+  background-size: 12px;
+  padding-right: 24px;
 }
 
 select.property-value {
   border: 1px solid #444;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
   background-color: #252525;
   color: #e0e0e0;
   transition: all 0.2s;
-  font-size: 13px;
-  min-width: 120px;
+  font-size: 12px;
+  min-width: 100px;
+  max-width: 140px;
   cursor: pointer;
 }
 
@@ -842,19 +833,19 @@ select.property-value option {
 .toggle-switch-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .boolean-value {
-  font-size: 13px;
+  font-size: 12px;
   min-width: 40px;
 }
 
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 24px;
+  width: 40px;
+  height: 20px;
 }
 
 .toggle-switch input {
@@ -872,16 +863,16 @@ select.property-value option {
   bottom: 0;
   background-color: #444;
   transition: .3s;
-  border-radius: 24px;
+  border-radius: 20px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
   transition: .3s;
   border-radius: 50%;
@@ -897,11 +888,11 @@ input:focus+.slider {
 }
 
 input:checked+.slider:before {
-  transform: translateX(24px);
+  transform: translateX(20px);
 }
 
 .slider.round {
-  border-radius: 24px;
+  border-radius: 20px;
 }
 
 .slider.round:before {
@@ -912,7 +903,7 @@ input:checked+.slider:before {
 .number-input-container {
   display: flex;
   align-items: center;
-  max-width: 160px;
+  max-width: 140px;
 }
 
 .number-value {
@@ -930,8 +921,8 @@ input:checked+.slider:before {
 }
 
 .number-btn {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -939,7 +930,7 @@ input:checked+.slider:before {
   border: 1px solid #444;
   color: #ddd;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   user-select: none;
   transition: all 0.2s;
@@ -964,13 +955,13 @@ input:checked+.slider:before {
 
 /* 插槽类型徽章 */
 .slot-type {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 500;
   text-align: center;
-  min-width: 80px;
-  max-width: 120px;
+  min-width: 70px;
+  max-width: 100px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1038,40 +1029,40 @@ input:checked+.slider:before {
 }
 
 /* 滚动条样式 */
-.dialog-body::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.sidebar-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.dialog-body::-webkit-scrollbar-track {
+.sidebar-body::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
-.dialog-body::-webkit-scrollbar-thumb {
+.sidebar-body::-webkit-scrollbar-thumb {
   background: rgba(74, 107, 175, 0.6);
-  border-radius: 4px;
-  border: 2px solid rgba(20, 20, 35, 0.8);
+  border-radius: 3px;
+  border: 1px solid rgba(20, 20, 35, 0.8);
 }
 
-.dialog-body::-webkit-scrollbar-thumb:hover {
+.sidebar-body::-webkit-scrollbar-thumb:hover {
   background: rgba(74, 107, 175, 0.8);
 }
 
 /* Firefox样式 */
-.dialog-body {
+.sidebar-body {
   scrollbar-width: thin;
   scrollbar-color: rgba(74, 107, 175, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 /* 颜色选择器样式 */
 .color-picker {
-  width: 80px;
-  height: 32px;
+  width: 70px;
+  height: 28px;
   padding: 2px;
   background-color: transparent;
   border: 1px solid #444;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
